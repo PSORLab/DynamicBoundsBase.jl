@@ -4,8 +4,7 @@ using DocStringExtensions
 
 export HasStateBounds, HasConstantStateBounds, HasVariableStateBounds,
        HasUserJacobian, DenseLinearInvariant, ConstantStateBounds, VariableStateBounds,
-       AffineLinearInvariant,
-       AbstractDERelaxProblem, AbstractRelaxProblemAttribute
+       PolyhedralConstraint, AbstractDERelaxProblem, AbstractRelaxProblemAttribute
 include("problem.jl")
 
 export NOMINAL, LOWER, UPPER, UNDEFINED, IntegratorName, Value, Gradient,
@@ -16,5 +15,8 @@ include("integrator.jl")
 
 export set!, setall!, get, getall!, make
 include("attribute_handlers.jl")
+
+export IntegratorStates
+include("utilities.jl")
 
 end

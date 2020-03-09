@@ -70,37 +70,19 @@ struct HasUserJacobian <: AbstractRelaxProblemAttribute end
 """
 $(TYPEDEF)
 """
-abstract type AbstractInvariant <: AbstractRelaxProblemAttribute end
-
-const DENSE_LINEAR_INVARIANT_A_TOL = 1e-4
-const DENSE_LINEAR_INVARIANT_WIDTH_TOL = 1e-12
+abstract type AbstractPathConstraint <: AbstractRelaxProblemAttribute end
 
 """
 $(TYPEDEF)
 
 An object used to specify that the invariant `Ax(t,p) <= b` is valid fo all `t`.
 """
-struct ConstantLinearInvariant <: AbstractInvariant
+struct PolyhedralConstraint <: AbstractPathConstraint
     A::Array{Float64,2}
     b::Vector{Float64}
     isset::Bool
 end
-function ConstantLinearInvariant(A::Array{Float64,2}, b::Vector{Float64})
-    return LinearInvariant(A, b, true)
+function PolyhedralConstraint(A::Array{Float64,2}, b::Vector{Float64})
+    return PolyhedralConstraint(A, b, true)
 end
-ConstantLinearInvariant() = ConstantLinearInvariant(zeros(Float64,1,1),zeros(Float64,1),false)
-
-"""
-$(TYPEDEF)
-
-An object used to specify that the invariant `<= x(t,p) <= b` is valid fo all `t`.
-"""
-struct AffineLinearInvariant <: AbstractInvariant
-    A::Array{Float64,2}
-    b::Vector{Float64}
-    isset::Bool
-end
-function AffineLinearInvariant(A::Array{Float64,2}, b::Vector{Float64})
-    return AffineLinearInvariant(A, b, true)
-end
-AffineLinearInvariant() = AffineLinearInvariant(zeros(Float64,1,1),zeros(Float64,1),false)
+PolyhedralConstraint() = PolyhedralConstraint(zeros(Float64,1,1),zeros(Float64,1),false)
