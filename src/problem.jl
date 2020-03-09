@@ -31,13 +31,13 @@ $(TYPEDEF)
 
 A problem attribute used to store constant state bounds.
 """
-struct ConstantBounds <: AbstractRelaxProblemAttribute
+struct ConstantStateBounds <: AbstractRelaxProblemAttribute
     xL::Vector{Float64}
     xU::Vector{Float64}
     flag::Bool
 end
-ConstantStateBounds() = ConstantBounds(Float64[], Float64[], false)
-ConstantStateBounds(xL, xU) = ConstantBounds(xL, xU, true)
+ConstantStateBounds() = ConstantStateBounds(Float64[], Float64[], false)
+ConstantStateBounds(xL, xU) = ConstantStateBounds(xL, xU, true)
 
 """
 $(TYPEDEF)
