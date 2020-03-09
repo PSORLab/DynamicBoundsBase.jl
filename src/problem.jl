@@ -80,7 +80,7 @@ An object used to specify that the invariant `Ax(t,p) <= b` is valid fo all `t`.
 struct PolyhedralConstraint <: AbstractPathConstraint
     A::Array{Float64,2}
     b::Vector{Float64}
-    isset::Bool
+    flag::Bool
 end
 function PolyhedralConstraint(A::Array{Float64,2}, b::Vector{Float64})
     return PolyhedralConstraint(A, b, true)

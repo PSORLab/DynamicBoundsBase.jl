@@ -13,7 +13,7 @@ export NOMINAL, LOWER, UPPER, UNDEFINED, IntegratorName, Value, Gradient,
        integrate!, make, AbstractDERelaxIntegator, AbstractODERelaxIntegator
 include("integrator.jl")
 
-export set!, setall!, get, getall!, make
+export set!, setall!, get, getall!, make, supports
 include("attribute_handlers.jl")
 
 export IntegratorStates
