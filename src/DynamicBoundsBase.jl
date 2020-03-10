@@ -19,4 +19,8 @@ include("attribute_handlers.jl")
 export IntegratorStates
 include("utilities.jl")
 
+using DiffEqBase: ODEFunction, wrapfun_iip
+export ODERelaxProb
+include("problem_types/ODERelaxProb.jl")
+
 end
