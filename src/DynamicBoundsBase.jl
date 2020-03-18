@@ -2,8 +2,10 @@ module DynamicBoundsBase
 
 using DocStringExtensions
 
+import Base.get
+
 export HasStateBounds, HasConstantStateBounds, HasVariableStateBounds,
-       HasUserJacobian, DenseLinearInvariant, ConstantStateBounds, VariableStateBounds,
+       HasUserJacobian, ConstantStateBounds, VariableStateBounds,
        PolyhedralConstraint, AbstractDERelaxProblem, AbstractRelaxProblemAttribute
 include("problem.jl")
 

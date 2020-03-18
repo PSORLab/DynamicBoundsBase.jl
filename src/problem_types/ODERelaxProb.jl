@@ -119,6 +119,6 @@ function get(x::ODERelaxProb, invariant::PolyhedralConstraint)
     return x.polyhedral_constraint
 end
 function set!(x::ODERelaxProb, invariant::PolyhedralConstraint)
-    x.polyhedral_constraint= invariant
+    x.polyhedral_constraint = invariant
     return
 end
