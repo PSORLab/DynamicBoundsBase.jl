@@ -9,10 +9,11 @@ export HasStateBounds, HasConstantStateBounds, HasVariableStateBounds,
        PolyhedralConstraint, AbstractDERelaxProblem, AbstractRelaxProblemAttribute
 include("problem.jl")
 
-export NOMINAL, LOWER, UPPER, UNDEFINED, IntegratorName, Value, Gradient,
+export Nominal, Lower, Upper, Undefined, IntegratorName, Value, Gradient,
        Subgradient, Bound, Relaxation,IsNumeric, IsSolutionSet, TerminationStatus,
        ParameterValue, ParameterBound, SupportSet, TerminationStatusCode, relax!,
-       integrate!, make, AbstractDERelaxIntegator, AbstractODERelaxIntegator
+       integrate!, make, AbstractDERelaxIntegator, AbstractODERelaxIntegator,
+       AbstractBoundLoc, TimeIndex
 include("integrator.jl")
 
 export set!, setall!, get, getall!, make, supports

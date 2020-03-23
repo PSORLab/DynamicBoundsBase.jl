@@ -1,4 +1,13 @@
-@enum(BoundLoc, LOWER, UPPER, NOMINAL, UNDEFINED)
+"""
+$(TYPEDEF)
+
+Abstract supertype indicating the type of value returned at a specific index.
+"""
+abstract type AbstractBoundLoc end
+struct Lower <: AbstractBoundLoc end
+struct Upper <: AbstractBoundLoc end
+struct Nominal <: AbstractBoundLoc end
+struct Undefined <: AbstractBoundLoc end
 
 """
 $(TYPEDEF)
@@ -31,6 +40,20 @@ Base.broadcastable(attribute::AbstractIntegatorAttribute) = Ref(attribute)
 """
 $(TYPEDEF)
 
+An abstract supertype for index structures needed to reference parameters or time.
+"""
+abstract type AbstractDynamicIndex end
+
+"""
+$(TYPEDEF)
+"""
+struct TimeIndex
+    t::Float64
+end
+
+"""
+$(TYPEDEF)
+
 An integrator attribute for the string identifying the integration scheme.
 """
 struct IntegratorName <: AbstractIntegatorAttribute end
@@ -40,22 +63,22 @@ $(TYPEDEF)
 
 An integrator attribute for the Gradient.
 """
-struct Gradient{T} <: AbstractIntegatorAttribute
+struct Gradient{T <: AbstractBoundLoc} <: AbstractIntegatorAttribute
     index::Int
     time::Float64
 end
-Gradient{LOWER}() = Gradient{LOWER}(-1,-Inf)
-Gradient{UPPER}() = Gradient{UPPER}(-1,-Inf)
-Gradient{NOMINAL}() = Gradient{NOMINAL}(-1,-Inf)
-Gradient() = Gradient{UNDEFINED}(-1,-Inf)
+Gradient{Lower}() = Gradient{Lower}(-1, -Inf)
+Gradient{Upper}() = Gradient{Upper}(-1, -Inf)
+Gradient{Nominal}() = Gradient{Nominal}(-1, -Inf)
+Gradient() = Gradient{Undefined}(-1, -Inf)
 
 """
 $(TYPEDSIGNATURES)
 
 This constructor builds a structure that references the gradient of
-the relaxation at time index `N`.
+the relaxation at time index `i`.
 """
-Gradient{T}(x::Val{N}) where {N,T} = Gradient{T}(N, -Inf)
+Gradient{T}(i::TimeIndex) where {T <: AbstractBoundLoc} = Gradient{T}(i.t, -Inf)
 
 """
 $(TYPEDSIGNATURES)
@@ -63,28 +86,28 @@ $(TYPEDSIGNATURES)
 This constructor builds a structure that references the subgradient of
 the relaxation at time = `x`.
 """
-Gradient{T}(x::Float64) where T = Gradient{T}(-1, x)
+Gradient{T}(x::Float64) where {T <: AbstractBoundLoc} = Gradient{T}(-1, x)
 
 """
 $(TYPEDEF)
 
 An integrator attribute for the Subgradient.
 """
-struct Subgradient{T} <: AbstractIntegatorAttribute
+struct Subgradient{T <: AbstractBoundLoc} <: AbstractIntegatorAttribute
     index::Int
     time::Float64
 end
-Subgradient{LOWER}() = Subgradient{LOWER}(-1,-Inf)
-Subgradient{UPPER}() = Subgradient{UPPER}(-1,-Inf)
-Subgradient() = Subgradient{UNDEFINED}(-1,-Inf)
+Subgradient{Lower}() = Subgradient{Lower}(-1, -Inf)
+Subgradient{Upper}() = Subgradient{Upper}(-1, -Inf)
+Subgradient() = Subgradient{Undefined}(-1, -Inf)
 
 """
 $(TYPEDSIGNATURES)
 
 This constructor builds a structure that references the subgradient of
-the relaxation at time index `N`.
+the relaxation at time index `i`.
 """
-Subgradient{T}(x::Val{N}) where {N,T} = Subgradient{T}(N, -Inf)
+Subgradient{T}(i::TimeIndex) where {T <: AbstractBoundLoc} = Subgradient{T}(i.t, -Inf)
 
 """
 $(TYPEDSIGNATURES)
@@ -92,7 +115,7 @@ $(TYPEDSIGNATURES)
 This constructor builds a structure that references the subgradient of
 the relaxation at time = `x`.
 """
-Subgradient{T}(x::Float64) where T = Subgradient{T}(-1, x)
+Subgradient{T}(x::Float64) where {T <: AbstractBoundLoc} = Subgradient{T}(-1, x)
 
 """
 $(TYPEDEF)
@@ -103,28 +126,28 @@ struct Value <: AbstractIntegatorAttribute
     index::Int
     time::Float64
 end
-Value() = Value(-1,-Inf)
+Value() = Value(-1, -Inf)
 
 """
 $(TYPEDEF)
 
 An integrator attribute for state bounds.
 """
-struct Bound{T} <: AbstractIntegatorAttribute
+struct Bound{T <: AbstractBoundLoc} <: AbstractIntegatorAttribute
     index::Int
     time::Float64
 end
-Bound{LOWER}() = Bound{LOWER}(-1,-Inf)
-Bound{UPPER}() = Bound{UPPER}(-1,-Inf)
-Bound() = Bound{UNDEFINED}(-1,-Inf)
+Bound{Lower}() = Bound{Lower}(-1, -Inf)
+Bound{Upper}() = Bound{Upper}(-1, -Inf)
+Bound() = Bound{Undefined}(-1, -Inf)
 
 """
 $(TYPEDSIGNATURES)
 
 This constructor builds a structure that references the state
-bounds at time index `N`.
+bounds at time index `i`.
 """
-Bound{T}(x::Val{N}) where {N,T} = Bound{T}(N, -Inf)
+Bound{T}(i::TimeIndex) where {T <: AbstractBoundLoc} = Bound{T}(i.t, -Inf)
 
 """
 $(TYPEDSIGNATURES)
@@ -132,35 +155,35 @@ $(TYPEDSIGNATURES)
 This constructor builds a structure that references the state
 bounds at time = `x`.
 """
-Bound{T}(x::Float64) where T = Bound{T}(-1, x)
+Bound{T}(x::Float64) where {T <: AbstractBoundLoc} = Bound{T}(-1, x)
 
 """
 $(TYPEDEF)
 
 An integrator attribute for relaxations.
 """
-struct Relaxation{T} <: AbstractIntegatorAttribute
+struct Relaxation{T <: AbstractBoundLoc} <: AbstractIntegatorAttribute
     index::Int
     time::Float64
 end
-Relaxation{LOWER}() = Relaxation{LOWER}(-1,-Inf)
-Relaxation{UPPER}() = Relaxation{UPPER}(-1,-Inf)
-Relaxation() = Relaxation{UNDEFINED}(-1,-Inf)
+Relaxation{Lower}() = Relaxation{Lower}(-1, -Inf)
+Relaxation{Upper}() = Relaxation{Upper}(-1, -Inf)
+Relaxation() = Relaxation{Undefined}(-1, -Inf)
 
 """
 $(TYPEDSIGNATURES)
 
 This constructor builds a structure that references the relaxation
-at time index `N`.
+at time index `i`.
 """
-Relaxation{T}(x::Val{N}) where {N,T<:BoundLoc} = Relaxation{T}(N, -Inf)
+Relaxation{T}(i::TimeIndex) where {T <: AbstractBoundLoc} = Relaxation{T}(i.t, -Inf)
 
 """
 $(TYPEDSIGNATURES)
 
 This constructor builds a structure that references relaxation at time = `x`.
 """
-Relaxation{T}(x::Float64) where {T} = Relaxation{T}(-1, x)
+Relaxation{T}(x::Float64) where {T <: AbstractBoundLoc} = Relaxation{T}(-1, x)
 
 """
 $(TYPEDEF)
@@ -210,19 +233,19 @@ $(TYPEDEF)
 
 A integrator attribute used to access the current parameter value.
 """
-struct ParameterBound{T} <: AbstractIntegatorAttribute
+struct ParameterBound{T <: AbstractBoundLoc} <: AbstractIntegatorAttribute
     i::Int
 end
-ParameterBound{LOWER}() = ParameterBound{LOWER}(-1)
-ParameterBound{UPPER}() = ParameterBound{UPPER}(-1)
-ParameterBound() = ParameterBound{UNDEFINED}(-1)
+ParameterBound{Lower}() = ParameterBound{Lower}(-1)
+ParameterBound{Upper}() = ParameterBound{Upper}(-1)
+ParameterBound() = ParameterBound{Undefined}(-1)
 
 """
 $(TYPEDEF)
 
 A integrator attribute used to access independent variable support set.
 """
-struct SupportSet{T<:AbstractFloat} <: AbstractIntegatorAttribute
+struct SupportSet{T <: AbstractFloat} <: AbstractIntegatorAttribute
     s::Vector{T}
 end
 
