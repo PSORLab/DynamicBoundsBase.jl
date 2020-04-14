@@ -206,6 +206,7 @@ struct IsSolutionSet <: AbstractIntegatorAttribute end
       EMPTY,
       RELAXATION_NOT_CALLED,
       NUMERICAL_ERROR,
+      LIMIT_EXCEEDED,
       INVALID_OPTION,
       OTHER_ERROR
 )
