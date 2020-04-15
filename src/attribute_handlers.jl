@@ -19,10 +19,10 @@ function get end
 get(integrator::AbstractDERelaxIntegator, attr::AbstractIntegatorAttribute, idxs::Vector) = get.(integrator, attr, idxs)
 get(problem::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, idxs::Vector) = get.(problem, attr, idxs)
 function get(m::AbstractDERelaxIntegator, attr::AbstractIntegatorAttribute, args...)
-    throw(ArgumentError("AbstractDERelaxIntegator of type $(typeof(m)) does not support accessing the attribute $attr"))
+    throw(ArgumentError("AbstractDERelaxIntegator of type $(typeof(m)) does not support accessing the attribute $attr via get"))
 end
 function get(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, args...)
-    throw(ArgumentError("AbstractDERelaxProblem of type $(typeof(m)) does not support accessing the attribute $attr"))
+    throw(ArgumentError("AbstractDERelaxProblem of type $(typeof(m)) does not support accessing the attribute $attr via get"))
 end
 
 """
@@ -33,10 +33,25 @@ that the the result is placed in the vector `output`.
 """
 function get! end
 function get!(output, m::AbstractDERelaxIntegator, attr::AbstractIntegatorAttribute, args...)
-    throw(ArgumentError("ModelLike of type $(typeof(m)) does not support accessing the attribute $attr"))
+    throw(ArgumentError("AbstractDERelaxIntegator of type $(typeof(m)) does not support accessing the attribute $attr via get!"))
 end
 function get!(output, m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, args...)
-    throw(ArgumentError("ModelLike of type $(typeof(m)) does not support accessing the attribute $attr"))
+    throw(ArgumentError("AbstractDERelaxProblem of type $(typeof(m)) does not support accessing the attribute $attr via get!"))
+end
+
+
+"""
+$(FUNCTIONNAME)
+
+An version of `get` which retreives all data asssocaited with a particular
+integrator attribute.
+"""
+function getall end
+function getall(m::AbstractDERelaxIntegator, attr::AbstractIntegatorAttribute, args...)
+    throw(ArgumentError("AbstractDERelaxIntegator of type $(typeof(m)) does not support accessing the attribute $attr via getall"))
+end
+function getall(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, args...)
+    throw(ArgumentError("AbstractDERelaxProblem of type $(typeof(m)) does not support accessing the attribute $attr via getall"))
 end
 
 
@@ -46,8 +61,14 @@ $(FUNCTIONNAME)
 An in-place version of `get!` which retreives all data asssocaited with a particular
 integrator attribute.
 """
+function getall! end
 function getall!(output, m::AbstractDERelaxIntegator, attr::AbstractIntegatorAttribute, args...)
+    throw(ArgumentError("AbstractDERelaxIntegator of type $(typeof(m)) does not support accessing the attribute $attr via getall!"))
 end
+function getall!(output, m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, args...)
+    throw(ArgumentError("AbstractDERelaxProblem of type $(typeof(m)) does not support accessing the attribute $attr via getall!"))
+end
+
 
 """
 $(FUNCTIONNAME)
