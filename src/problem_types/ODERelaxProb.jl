@@ -11,9 +11,10 @@ A structure used to hold a parametric ODEs problem.
 
 $(TYPEDFIELDS)
 """
-mutable struct ODERelaxProb{F,J,xType,K} <: AODERP
+mutable struct ODERelaxProb{F,JX,JP,xType,K} <: AODERP
     f::F
-    fj!::J
+    Jx!::JX
+    Jp!::JP
     x0::xType
     xL::Vector{Float64}
     xU::Vector{Float64}
@@ -22,7 +23,8 @@ mutable struct ODERelaxProb{F,J,xType,K} <: AODERP
     p::Vector{Float64}
     pL::Vector{Float64}
     pU::Vector{Float64}
-    user_jacobian::Bool
+    user_Jx::Bool
+    user_Jp::Bool
     user_state_bnd::Bool
     variable_state_bnd::Bool
     nx::Int
@@ -40,7 +42,7 @@ Constructor for basic parametric ODE problem. The rhs function is
 function ODERelaxProb(f::F, tspan::Tuple{Float64, Float64}, x0::xType,
                       pL::Vector{Float64}, pU::Vector{Float64};
                       xL::Vector{Float64} = Float64[], xU::Vector{Float64} = Float64[],
-                      jacobian = nothing, kwargs...) where {F,xType,tType,pBnd}
+                      Jx! = nothing, Jp! = nothing, kwargs...) where {F,xType,tType,pBnd}
 
     if haskey(kwargs,:p)
         p::Vector{Float64} = kwargs[:p]
@@ -67,7 +69,6 @@ function ODERelaxProb(f::F, tspan::Tuple{Float64, Float64}, x0::xType,
         tsupports = Float64[]
     end
 
-    user_jacobian::Bool = (jacobian !== nothing)
     user_state_bnd::Bool = false
     variable_state_bnd = (~isempty(xL)) & (~isempty(xU))
     user_state_bnd |= variable_state_bnd
@@ -76,20 +77,31 @@ function ODERelaxProb(f::F, tspan::Tuple{Float64, Float64}, x0::xType,
         user_state_bnd |= true
         @assert length(xL) == length(xU)
     end
-    J0 = zeros(Real, nx, nx)
-    x0s = zeros(Real, nx)
 
-    if jacobian !== nothing
-        Jwrap = wrapfun_iip(jacobian,(J0,x0s,p,tspan[1],))
-        fwrap = ODEFunction(f; jac = Jwrap)
+    # compute Jacobians
+    x0s = zeros(Real, nx)
+    Jx0 = zeros(Real, nx, nx)
+    Jp0 = zeros(Real, nx, np)
+    user_Jx!::Bool = (Jx! !== nothing)
+    user_Jp!::Bool = (Jp! !== nothing)
+    if user_Jx! && user_Jp!
+        JxWrap = wrapfun_iip(Jx, (Jx0, x0s, p, tspan[1],))
+        JpWrap = wrapfun_iip(Jx, (Jp0, x0s, p, tspan[1],))
+        fwrap = ODEFunction(f; jac = JxWrap, paramjac = JpWrap)
+    elseif user_Jx!
+        JxWrap = wrapfun_iip(Jx, (Jx0, x0s, p, tspan[1],))
+        fwrap = ODEFunction(f; jac = JxWrap)
+    elseif user_Jp!
+        JpWrap = wrapfun_iip(Jp, (Jp0, x0s, p, tspan[1],))
+        fwrap = ODEFunction(f; paramjac = JpWrap)
     else
         fwrap = ODEFunction(f)
     end
 
-    return ODERelaxProb(fwrap, jacobian, x0, xL, xU,
-                        tspan, tsupports, p, pL, pU, user_jacobian,
-                        user_state_bnd, variable_state_bnd, nx, np, PolyhedralConstraint(),
-                        ConstantStateBounds(), kwargs)
+    return ODERelaxProb(fwrap, Jx!, Jp!, x0, xL, xU,
+                        tspan, tsupports, p, pL, pU, user_Jx!, user_Jp!,
+                        user_state_bnd, variable_state_bnd, nx, np,
+                        PolyhedralConstraint(), ConstantStateBounds(), kwargs)
 end
 
 supports(::ODERelaxProb, ::HasStateBounds) = true
