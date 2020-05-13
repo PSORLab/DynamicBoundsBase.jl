@@ -16,8 +16,12 @@ supports(::AbstractDERelaxProblem, ::AbstractRelaxProblemAttribute) = false
 $(TYPEDSIGNATURES)
 """
 function get end
-get(integrator::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, idxs::Vector) = get.(integrator, attr, idxs)
-get(problem::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, idxs::Vector) = get.(problem, attr, idxs)
+function get(integrator::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, idxs::Vector)
+	[get(integrator, attr, i) for i in idxs]
+end
+function get(problem::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, idxs::Vector)
+	[get(problem, attr, i) for i in idxs]
+end
 function get(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
     throw(ArgumentError("AbstractDERelaxIntegrator of type $(typeof(m)) does not support accessing the attribute $attr via get"))
 end
@@ -32,6 +36,18 @@ An in-place version of `get`. The signature matches that of `get` except
 that the the result is placed in the vector `output`.
 """
 function get! end
+function get!(output,integrator::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, idxs::Vector)
+	for (i, index) in enumerate(idxs)
+		output[i] = get(problem, attr, index)
+	end
+	nothing
+end
+function get!(output, problem::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, idxs::Vector)
+	for (i, index) in enumerate(idxs)
+		output[i] = get(problem, attr, index)
+	end
+	nothing
+end
 function get!(output, m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
     throw(ArgumentError("AbstractDERelaxIntegrator of type $(typeof(m)) does not support accessing the attribute $attr via get!"))
 end
@@ -43,7 +59,7 @@ end
 """
 $(FUNCTIONNAME)
 
-An version of `get` which retreives all data asssocaited with a particular
+An version of `get` which retreives all data asssociated with a particular
 integrator attribute.
 """
 function getall end
@@ -58,7 +74,7 @@ end
 """
 $(FUNCTIONNAME)
 
-An in-place version of `get!` which retreives all data asssocaited with a particular
+An in-place version of `get!` which retreives all data asssociated with a particular
 integrator attribute.
 """
 function getall! end
@@ -75,41 +91,47 @@ $(FUNCTIONNAME)
 
 Assigns a `value` to the `attr` attribute of the integrator, problem, or relaxation.
 """
-function set end
+function set! end
 
-function set(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, idxs::Vector, vec_of_val::Vector)
+function set!(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, idxs::Vector, vec_of_val::Vector)
     if length(idxs) != length(vec_of_val)
         throw(DimensionMismatch("Number of indices ($(length(idxs))) does " *
                                 "not match the number of values " *
                                 "($(length(vec_of_val))) set to `$attr`."))
     end
-    return set.(m, attr, idxs, vec_of_val)
+	for v in vec_of_val
+		set!(m, attr, idxs, v)
+	end
 end
 
-function set(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, idxs::Vector, vec_of_val::Vector)
+function set!(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, idxs::Vector, vec_of_val::Vector)
     if length(idxs) != length(vec_of_val)
         throw(DimensionMismatch("Number of indices ($(length(idxs))) does " *
                                 "not match the number of values " *
                                 "($(length(vec_of_val))) set to `$attr`."))
     end
-    return set.(m, attr, idxs, vec_of_val)
+	for v in vec_of_val
+		set!(m, attr, idxs, v)
+	end
+	nothing
 end
 
-function set(model::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
-    throw_set_error_fallback(model, attr, args...)
+function set!(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
+    throw_set_error_fallback(m, attr, args...)
 end
 
-function set(model::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, args...)
-    throw_set_error_fallback(model, attr, args...)
+function set!(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, args...)
+    throw_set_error_fallback(m, attr, args...)
 end
 
 """
 $(FUNCTIONNAME)
 
-An in-place version of `set!` which sets all data asssocaited with a particular
+An in-place version of `set!` which sets all data asssociated with a particular
 integrator attribute.
 """
 function setall!(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
+	throw_set_error_fallback(model, attr, args...)
 end
 
 """
@@ -153,23 +175,27 @@ SetRelaxAttributeNotAllowed(attr::AnyDEAttribute) = SetRelaxAttributeNotAllowed(
 operation_name(err::SetRelaxAttributeNotAllowed) = "Setting attribute $(err.attr)"
 message(err::SetRelaxAttributeNotAllowed) = err.message
 
-function throw_set_error_fallback(model::AbstractDERelaxIntegrator,
-                                  attr::AbstractIntegratorAttribute,
-                                  value;
-                                  error_if_supported = SetRelaxAttributeNotAllowed(attr))
-    if supports(model, attr)
-        throw(error_if_supported)
-    else
-        throw(UnsupportedRelaxAttribute(attr))
-    end
-end
-function throw_set_error_fallback(model::AbstractDERelaxProblem,
-                                  attr::AbstractRelaxProblemAttribute,
-                                  index, value;
-                                  error_if_supported = SetRelaxAttributeNotAllowed(attr))
-    if supports(model, attr, typeof(index))
-        throw(error_if_supported)
-    else
-        throw(UnsupportedRelaxAttribute(attr))
-    end
+
+for (mtype, attr_type) in ((AbstractDERelaxIntegrator, AbstractIntegratorAttribute),
+	                       (AbstractDERelaxProblem, AbstractRelaxProblemAttribute))
+	@eval function throw_set_error_fallback(storage::$mtype,
+	                                  attr::$attr_type,
+	                                  value;
+	                                  error_if_supported = SetRelaxAttributeNotAllowed(attr))
+	    if supports(storage, attr)
+	        throw(error_if_supported)
+	    else
+	        throw(UnsupportedRelaxAttribute(attr))
+	    end
+	end
+	@eval function throw_set_error_fallback(storage::$mtype,
+	                                  attr::$attr_type,
+	                                  index, value;
+	                                  error_if_supported = SetRelaxAttributeNotAllowed(attr))
+	    if supports(storage, attr, typeof(index))
+	        throw(error_if_supported)
+	    else
+	        throw(UnsupportedRelaxAttribute(attr))
+	    end
+	end
 end

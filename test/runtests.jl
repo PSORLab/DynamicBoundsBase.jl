@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-#using Revise
+using Revise
 using Test, DynamicBoundsBase
 
 const DEqR = DynamicBoundsBase
@@ -77,12 +77,12 @@ end
     DEqR.get(t::TestIntegrator, a::DEqR.TerminationStatus) = t.temp
     DEqR.get(t::TestIntegrator, a::DEqR.Value) = t.temp
 
-    DEqR.set(t::TestIntegrator, a::DEqR.Gradient, value) = (t.temp = value)
-    DEqR.set(t::TestIntegrator, a::DEqR.Subgradient, value) = (t.temp = value)
-    DEqR.set(t::TestIntegrator, a::DEqR.Bound, value) = (t.temp = value)
-    DEqR.set(t::TestIntegrator, a::DEqR.Relaxation, value) = (t.temp = value)
-    DEqR.set(t::TestIntegrator, a::DEqR.TerminationStatus, value) = (t.temp = value)
-    DEqR.set(t::TestIntegrator, a::DEqR.Value, value) = (t.temp = value)
+    DEqR.set!(t::TestIntegrator, a::DEqR.Gradient, value) = (t.temp = value)
+    DEqR.set!(t::TestIntegrator, a::DEqR.Subgradient, value) = (t.temp = value)
+    DEqR.set!(t::TestIntegrator, a::DEqR.Bound, value) = (t.temp = value)
+    DEqR.set!(t::TestIntegrator, a::DEqR.Relaxation, value) = (t.temp = value)
+    DEqR.set!(t::TestIntegrator, a::DEqR.TerminationStatus, value) = (t.temp = value)
+    DEqR.set!(t::TestIntegrator, a::DEqR.Value, value) = (t.temp = value)
 
     undefined_integrator = UndefinedIntegrator()
     @test !DEqR.supports(undefined_integrator, DEqR.IntegratorName())
@@ -106,19 +106,19 @@ end
     @test @inferred DEqR.supports(test_integrator, DEqR.TerminationStatus())
     @test @inferred DEqR.supports(test_integrator, DEqR.Value())
 
-    @test_nowarn @inferred DEqR.set(test_integrator, DEqR.Gradient{DEqR.Lower}(1.1), 1.2)
+    @test_nowarn @inferred DEqR.set!(test_integrator, DEqR.Gradient{DEqR.Lower}(1.1), 1.2)
     val = @inferred DEqR.get(test_integrator, DEqR.Gradient{DEqR.Lower}(1.1))
     @test val === 1.2
-    @test_nowarn @inferred DEqR.set(test_integrator, DEqR.Subgradient{DEqR.Lower}(1.1), 1.3)
+    @test_nowarn @inferred DEqR.set!(test_integrator, DEqR.Subgradient{DEqR.Lower}(1.1), 1.3)
     val = @inferred DEqR.get(test_integrator, DEqR.Subgradient{DEqR.Lower}(1.1))
     @test val === 1.3
-    @test_nowarn @inferred DEqR.set(test_integrator, DEqR.Bound{DEqR.Lower}(1.1), 1.4)
+    @test_nowarn @inferred DEqR.set!(test_integrator, DEqR.Bound{DEqR.Lower}(1.1), 1.4)
     val = @inferred DEqR.get(test_integrator, DEqR.Bound{DEqR.Lower}(1.1))
     @test val === 1.4
-    @test_nowarn @inferred DEqR.set(test_integrator, DEqR.Relaxation{DEqR.Lower}(1.1), 1.5)
+    @test_nowarn @inferred DEqR.set!(test_integrator, DEqR.Relaxation{DEqR.Lower}(1.1), 1.5)
     val = @inferred DEqR.get(test_integrator, DEqR.Relaxation{DEqR.Lower}(1.1))
     @test val === 1.5
-    @test_nowarn DEqR.set(test_integrator, DEqR.Value(), 1.53)
+    @test_nowarn DEqR.set!(test_integrator, DEqR.Value(), 1.53)
     val = @inferred DEqR.get(test_integrator, DEqR.Value())
     @test val === 1.53
 
@@ -127,7 +127,7 @@ end
     @test @inferred DEqR.get(test_integrator, DEqR.IsNumeric())
     @test @inferred DEqR.get(test_integrator, DEqR.IsSolutionSet())
 
-    @test_nowarn @inferred DEqR.set(test_integrator, DEqR.TerminationStatus(), 1.9)
+    @test_nowarn @inferred DEqR.set!(test_integrator, DEqR.TerminationStatus(), 1.9)
     val = @inferred DEqR.get(test_integrator, DEqR.TerminationStatus())
     @test val === 1.9
 
@@ -172,14 +172,28 @@ end
     @test_throws ArgumentError DEqR.get(undefined_problem, new_pa)
     @test_throws ArgumentError DEqR.get(undefined_integrator, new_ia)
 
-    #@test_throws ArgumentError DEqR.get(undefined_problem, new_pa, Float64[1.0; 2.0])
-    #@test_throws ArgumentError DEqR.get(undefined_integrator, new_ia, Float64[1.0; 2.0])
+    v = Float64[1.0; 2.0]
+    @test_throws ArgumentError DEqR.get(undefined_problem, new_pa, v)
+    @test_throws ArgumentError DEqR.get(undefined_integrator, new_ia, v)
 
     @test_throws ArgumentError DEqR.getall!(out, undefined_problem, new_pa)
     @test_throws ArgumentError DEqR.getall!(out, undefined_integrator, new_ia)
 
     @test_throws ArgumentError DEqR.getall(undefined_problem, new_pa)
     @test_throws ArgumentError DEqR.getall(undefined_integrator, new_ia)
+
+    @test_throws DynamicBoundsBase.UnsupportedRelaxAttribute{new_problem_attribute} DEqR.set!(undefined_problem, new_pa, 1)
+    @test_throws DynamicBoundsBase.UnsupportedRelaxAttribute{new_integrator_attribute} DEqR.set!(undefined_integrator, new_ia, 1)
+
+    v = Float64[1.0; 2.0]
+    @test_throws DimensionMismatch DEqR.set!(undefined_problem, new_pa, v, [1])
+    @test_throws DimensionMismatch DEqR.set!(undefined_integrator, new_ia, v, [1])
+
+    #DEqR.set!(undefined_problem, new_pa, v, [1; 2])
+    #DEqR.set!(undefined_integrator, new_ia, v, [1; 2])
+
+    #DEqR.setall!(undefined_problem, new_pa, v, [1; 2])
+    #DEqR.setall!(undefined_integrator, new_ia, v, [1; 2])
 end
 
 @testset "ODE Relax Problem" begin
