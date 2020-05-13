@@ -34,13 +34,12 @@ A problem attribute used to store constant state bounds.
 struct ConstantStateBounds <: AbstractRelaxProblemAttribute
     xL::Vector{Float64}
     xU::Vector{Float64}
-    flag::Bool
+    function ConstantStateBounds(xL::Vector{Float64}, xU::Vector{Float64})
+        @assert length(xL) == length(xU)
+        new(xL, xU)
+    end
 end
-ConstantStateBounds() = ConstantStateBounds(Float64[], Float64[], false)
-function ConstantStateBounds(xL, xU)
-    @assert length(xL) == length(xU)
-    ConstantStateBounds(xL, xU, true)
-end
+ConstantStateBounds() = ConstantStateBounds(Float64[], Float64[])
 
 """
 $(TYPEDEF)
@@ -57,10 +56,8 @@ A problem attribute used to store time-varying state bounds.
 struct VariableStateBounds{F1 <: Function, F2 <: Function} <: AbstractRelaxProblemAttribute
     xL::F1
     xU::F2
-    flag::Bool
 end
-VariableStateBounds() = VariableStateBounds(Base.isempty, Base.isempty, false)
-VariableStateBounds(xL, xU) = VariableStateBounds(xL, xU, true)
+VariableStateBounds() = VariableStateBounds(Base.isempty, Base.isempty)
 
 
 """
@@ -83,10 +80,9 @@ An object used to specify that the invariant `Ax(t,p) <= b` is valid fo all `t`.
 struct PolyhedralConstraint <: AbstractPathConstraint
     A::Array{Float64,2}
     b::Vector{Float64}
-    flag::Bool
+    function PolyhedralConstraint(A::Array{Float64,2}, b::Vector{Float64})
+        @assert size(A,1) == length(b)
+        return new(A, b)
+    end
 end
-function PolyhedralConstraint(A::Array{Float64,2}, b::Vector{Float64})
-    @assert size(A,1) == length(b)
-    return PolyhedralConstraint(A, b, true)
-end
-PolyhedralConstraint() = PolyhedralConstraint(zeros(Float64,1,1),zeros(Float64,1),false)
+PolyhedralConstraint() = PolyhedralConstraint(zeros(Float64,1,1), zeros(Float64,1))

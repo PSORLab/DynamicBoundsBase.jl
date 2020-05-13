@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-
+#using Revise
 using Test, DynamicBoundsBase
 
 const DEqR = DynamicBoundsBase
@@ -96,22 +96,18 @@ const TSC = DEqR.TerminationStatusCode
     vsbnds1 = DEqR.VariableStateBounds()
     @test vsbnds1.xL == Base.isempty
     @test vsbnds1.xU == Base.isempty
-    @test !vsbnds1.flag
 
     vsbnds2 = DEqR.VariableStateBounds(x -> 1.0*x, x-> 2.0*x)
     @test vsbnds2.xL(1.0) == 1.0
     @test vsbnds2.xU(1.1) == 2.2
-    @test vsbnds2.flag
 
     cbnds1 = DEqR.ConstantStateBounds()
     @test isempty(cbnds1.xL)
     @test isempty(cbnds1.xU)
-    @test !cbnds1.flag
 
     cbnds2 = DEqR.ConstantStateBounds([1.0], [2.2])
     @test cbnds2.xL[1] == 1.0
     @test cbnds2.xU[1] == 2.2
-    @test cbnds2.flag
 
     ref_attr = DEqR.VariableStateBounds()
     ref = Ref(ref_attr)
@@ -120,7 +116,6 @@ const TSC = DEqR.TerminationStatusCode
     pconstr = DEqR.PolyhedralConstraint([1.0 1.0; 2.0 2.1], [3.2; 3.1])
     @test pconstr.A == [1.0 1.0; 2.0 2.1]
     @test pconstr.b == [3.2; 3.1]
-    @test pconstr.flag
 
     states = DEqR.IntegratorStates()
     @test !states.first_pnt_eval
@@ -154,13 +149,36 @@ end
     pL = [-1.0]
     pU = [1.0]
     pval = [0.1]
+    tsupports = [0.1; 0.2; 0.3]
 
-    prob = DEqR.ODERelaxProb(f!, tspan, x0, pL, pU, xL = xL, xU = xU, Jx! = Jx!, Jp! = Jp!, p = pval)
+    prob = DEqR.ODERelaxProb(f!, tspan, x0, pL, pU, xL = xL, xU = xU, Jx! = Jx!,
+                             Jp! = Jp!, p = pval, tsupports = tsupports, nx = 1)
 
     @test DEqR.supports(prob, DEqR.HasStateBounds())
     @test DEqR.supports(prob, DEqR.HasConstantStateBounds())
     @test DEqR.supports(prob, DEqR.HasVariableStateBounds())
     @test DEqR.supports(prob, DEqR.HasUserJacobian())
     @test DEqR.supports(prob, DEqR.ConstantStateBounds())
-    #@test DEqR.supports(prob, DEqR.PolyhedralConstraint())
+    @test DEqR.supports(prob, DEqR.PolyhedralConstraint())
+
+    @test DEqR.get(prob, DEqR.HasStateBounds())
+    @test DEqR.get(prob, DEqR.HasConstantStateBounds())
+    @test DEqR.get(prob, DEqR.HasVariableStateBounds())
+    #@test DEqR.get(prob, DEqR.HasUserJacobian())
+
+
+    cbnds = DEqR.ConstantStateBounds([1.0], [2.2])
+    pconstr = DEqR.PolyhedralConstraint([1.0 1.0; 2.0 2.1], [3.2; 3.1])
+
+    @test_nowarn DEqR.set!(prob, cbnds)
+    @test_nowarn DEqR.set!(prob, pconstr)
+
+    csbnds = DEqR.get(prob, DEqR.ConstantStateBounds())
+    pconstrs = DEqR.get(prob, DEqR.PolyhedralConstraint())
+
+    @test csbnds.xL[1] == 1.0
+    @test csbnds.xU[1] == 2.2
+
+    @test pconstrs.A[2,2] == 2.1
+    @test pconstrs.b[1] == 3.2
 end
