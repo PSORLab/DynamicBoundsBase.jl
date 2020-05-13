@@ -10,6 +10,9 @@ const TSC = DEqR.TerminationStatusCode
     struct UndefinedIntegrator <: DEqR.AbstractDERelaxIntegator end
     struct UndefinedProblem <: DEqR.AbstractDERelaxProblem end
 
+    undefined_problem = UndefinedProblem()
+    DEqR.supports(undefined_problem, DEqR.ConstantStateBounds()) == false
+
     mutable struct TestIntegrator <: DEqR.AbstractODERelaxIntegator
         temp::Float64
     end
@@ -89,4 +92,28 @@ const TSC = DEqR.TerminationStatusCode
     @test val === 1.9
 
     @test_throws ArgumentError DEqR.get(UndefinedIntegrator(), DEqR.IntegratorName())
+
+    vsbnds1 = DEqR.VariableStateBounds()
+    @test vsbnds1.xL == Base.isempty
+    @test vsbnds1.xU == Base.isempty
+    @test !vsbnds1.flag
+
+    vsbnds2 = DEqR.VariableStateBounds(x -> 1.0*x, x-> 2.0*x)
+    @test vsbnds2.xL(1.0) == 1.0
+    @test vsbnds2.xU(1.1) == 2.2
+    @test vsbnds2.flag
+
+    cbnds1 = DEqR.ConstantStateBounds()
+    @test isempty(cbnds1.xL)
+    @test isempty(cbnds1.xU)
+    @test !cbnds1.flag
+
+    cbnds2 = DEqR.ConstantStateBounds([1.0], [2.2])
+    @test cbnds2.xL[1] == 1.0
+    @test cbnds2.xU[1] == 2.2
+    @test cbnds2.flag
+
+    ref_attr = DEqR.VariableStateBounds()
+    ref = Ref(ref_attr)
+    @test Base.broadcastable(ref_attr).x == ref.x
 end
