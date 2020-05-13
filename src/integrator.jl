@@ -46,6 +46,8 @@ abstract type AbstractDynamicIndex end
 
 """
 $(TYPEDEF)
+
+A time index `t` used to access the value at `t.i`-th time point.
 """
 struct TimeIndex
     t::Int
@@ -264,11 +266,3 @@ $(TYPEDSIGNATURES)
 Provides a real-value integration at the current value set for each parameter.
 """
 function integrate! end
-
-"""
-$(TYPEDSIGNATURES)
-
-"""
-function make(prob::T, integrator::AbstractDERelaxIntegator) where {T<:AbstractDERelaxProblem}
-    error("make(prob<:ODERelaxProb, integrator) not defined for type of integrator")
-end

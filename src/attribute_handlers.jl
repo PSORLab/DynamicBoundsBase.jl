@@ -131,7 +131,8 @@ UnsupportedRelaxAttribute(attr::AnyDEAttribute) = UnsupportedRelaxAttribute(attr
 UnsupportedRelaxAttribute(err::UnsupportedRelaxAttribute) = "Attribute $(err.attr)"
 
 """
-    NotAllowedError <: Exception
+NotAllowedError <: Exception
+
 Abstract type for error thrown when an operation is supported but cannot be
 applied in the current state of the integrator
 .

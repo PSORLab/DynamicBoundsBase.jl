@@ -1,7 +1,7 @@
 """
 $(TYPEDEF)
 
-A structure that holds the state of the integrator
+A structure that holds the state of the integrator.
 
 $(TYPEDFIELDS)
 """
