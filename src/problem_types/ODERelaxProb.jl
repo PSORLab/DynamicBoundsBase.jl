@@ -133,7 +133,7 @@ function get(x::ODERelaxProb, t::HasVariableStateBounds)::Bool
     return x.variable_state_bnd
 end
 function get(x::ODERelaxProb, t::HasUserJacobian)::Bool
-    return x.user_jacobian
+    return x.user_Jx || x.user_Jp
 end
 
 function get(x::ODERelaxProb, t::ConstantStateBounds)

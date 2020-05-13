@@ -5,6 +5,40 @@ using Test, DynamicBoundsBase
 const DEqR = DynamicBoundsBase
 const TSC = DEqR.TerminationStatusCode
 
+@testset "Integrator Attribute Constructor" begin
+    t = TimeIndex(3)
+    @test Gradient{Lower}() == Gradient{Lower}(-1, -Inf)
+    @test Gradient{Upper}() == Gradient{Upper}(-1, -Inf)
+    @test Gradient{Nominal}() == Gradient{Nominal}(-1, -Inf)
+    @test Gradient() == Gradient{Undefined}(-1, -Inf)
+    @test Gradient{Nominal}(t). index == 3
+    @test Gradient{Nominal}(2.2).time == 2.2
+
+    @test Subgradient{Lower}() == Subgradient{Lower}(-1, -Inf)
+    @test Subgradient{Upper}() == Subgradient{Upper}(-1, -Inf)
+    @test Subgradient() == Subgradient{Undefined}(-1, -Inf)
+    @test Subgradient{Lower}(t). index == 3
+    @test Subgradient{Lower}(2.2).time == 2.2
+
+    @test Bound{Lower}() == Bound{Lower}(-1, -Inf)
+    @test Bound{Upper}() == Bound{Upper}(-1, -Inf)
+    @test Bound() == Bound{Undefined}(-1, -Inf)
+    @test Bound{Lower}(t). index == 3
+    @test Bound{Lower}(2.2).time == 2.2
+
+    @test Relaxation{Lower}() == Relaxation{Lower}(-1, -Inf)
+    @test Relaxation{Upper}() == Relaxation{Upper}(-1, -Inf)
+    @test Relaxation() == Relaxation{Undefined}(-1, -Inf)
+    @test Relaxation{Lower}(t). index == 3
+    @test Relaxation{Lower}(2.2).time == 2.2
+
+    @test ParameterValue() == ParameterValue(-1)
+
+    @test ParameterBound{Lower}() == ParameterBound{Lower}(-1)
+    @test ParameterBound{Upper}() == ParameterBound{Upper}(-1)
+    @test ParameterBound() == ParameterBound{Undefined}(-1)
+end
+
 @testset "Integrator Attributes Interface" begin
 
     struct UndefinedIntegrator <: DEqR.AbstractDERelaxIntegator end
@@ -54,6 +88,8 @@ const TSC = DEqR.TerminationStatusCode
     @test !DEqR.supports(undefined_integrator, DEqR.IsSolutionSet())
     @test !DEqR.supports(undefined_integrator, DEqR.TerminationStatus())
     @test !DEqR.supports(undefined_integrator, DEqR.Value())
+
+    @test_throws ErrorException make(undefined_problem, undefined_integrator)
 
     test_integrator = TestIntegrator(1.0)
     @test @inferred DEqR.supports(test_integrator, DEqR.IntegratorName())
@@ -164,8 +200,7 @@ end
     @test DEqR.get(prob, DEqR.HasStateBounds())
     @test DEqR.get(prob, DEqR.HasConstantStateBounds())
     @test DEqR.get(prob, DEqR.HasVariableStateBounds())
-    #@test DEqR.get(prob, DEqR.HasUserJacobian())
-
+    @test DEqR.get(prob, DEqR.HasUserJacobian())
 
     cbnds = DEqR.ConstantStateBounds([1.0], [2.2])
     pconstr = DEqR.PolyhedralConstraint([1.0 1.0; 2.0 2.1], [3.2; 3.1])

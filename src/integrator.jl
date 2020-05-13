@@ -48,7 +48,7 @@ abstract type AbstractDynamicIndex end
 $(TYPEDEF)
 """
 struct TimeIndex
-    t::Float64
+    t::Int
 end
 
 """
