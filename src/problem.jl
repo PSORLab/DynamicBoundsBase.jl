@@ -37,7 +37,10 @@ struct ConstantStateBounds <: AbstractRelaxProblemAttribute
     flag::Bool
 end
 ConstantStateBounds() = ConstantStateBounds(Float64[], Float64[], false)
-ConstantStateBounds(xL, xU) = ConstantStateBounds(xL, xU, true)
+function ConstantStateBounds(xL, xU)
+    @assert length(xL) == length(xU)
+    ConstantStateBounds(xL, xU, true)
+end
 
 """
 $(TYPEDEF)
@@ -83,6 +86,7 @@ struct PolyhedralConstraint <: AbstractPathConstraint
     flag::Bool
 end
 function PolyhedralConstraint(A::Array{Float64,2}, b::Vector{Float64})
+    @assert size(A,1) == length(b)
     return PolyhedralConstraint(A, b, true)
 end
 PolyhedralConstraint() = PolyhedralConstraint(zeros(Float64,1,1),zeros(Float64,1),false)

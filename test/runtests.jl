@@ -116,4 +116,51 @@ const TSC = DEqR.TerminationStatusCode
     ref_attr = DEqR.VariableStateBounds()
     ref = Ref(ref_attr)
     @test Base.broadcastable(ref_attr).x == ref.x
+
+    pconstr = DEqR.PolyhedralConstraint([1.0 1.0; 2.0 2.1], [3.2; 3.1])
+    @test pconstr.A == [1.0 1.0; 2.0 2.1]
+    @test pconstr.b == [3.2; 3.1]
+    @test pconstr.flag
+
+    states = DEqR.IntegratorStates()
+    @test !states.first_pnt_eval
+    @test states.new_decision_box
+    @test states.new_decision_pnt
+    @test states.termination_status === RELAXATION_NOT_CALLED
+end
+
+@testset "ODE Relax Problem" begin
+
+    x0(p) = [9.0]
+    xL = [0.0]
+    xU = [10.0]
+
+    function f!(dx, x, p, t)
+        dx[1] = p[1] - x[1]^2
+        nothing
+    end
+
+    function Jx!(dx, x, p, t)
+        dx[1] = -2.0*x[1]
+        nothing
+    end
+
+    function Jp!(dx, x, p, t)
+        dx[1] = one(p[1])
+        nothing
+    end
+
+    tspan = (0.0, 0.1)
+    pL = [-1.0]
+    pU = [1.0]
+    pval = [0.1]
+
+    prob = DEqR.ODERelaxProb(f!, tspan, x0, pL, pU, xL = xL, xU = xU, Jx! = Jx!, Jp! = Jp!, p = pval)
+
+    @test DEqR.supports(prob, DEqR.HasStateBounds())
+    @test DEqR.supports(prob, DEqR.HasConstantStateBounds())
+    @test DEqR.supports(prob, DEqR.HasVariableStateBounds())
+    @test DEqR.supports(prob, DEqR.HasUserJacobian())
+    @test DEqR.supports(prob, DEqR.ConstantStateBounds())
+    #@test DEqR.supports(prob, DEqR.PolyhedralConstraint())
 end
