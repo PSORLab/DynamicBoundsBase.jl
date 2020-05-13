@@ -15,7 +15,7 @@ $(TYPEDEF)
 Abstract supertype for any integrator that constructs relaxations of
 a differential equation problem.
 """
-abstract type AbstractDERelaxIntegator end
+abstract type AbstractDERelaxIntegrator end
 
 """
 $(TYPEDEF)
@@ -23,7 +23,7 @@ $(TYPEDEF)
 Abstract supertype for any integrator that constructs relaxations of
 an ordinary differential equation problem.
 """
-abstract type AbstractODERelaxIntegator <: AbstractDERelaxIntegator end
+abstract type AbstractODERelaxIntegrator <: AbstractDERelaxIntegrator end
 
 """
 $(TYPEDEF)
@@ -31,11 +31,11 @@ $(TYPEDEF)
 Abstract supertype for attributes that can be used to `set` or
 `get` attributes (properties) of variables in the model.
 """
-abstract type AbstractIntegatorAttribute end
+abstract type AbstractIntegratorAttribute end
 
 #This allows to use attributes in broadcast calls without the need to
 # embed it in a `Ref`
-Base.broadcastable(attribute::AbstractIntegatorAttribute) = Ref(attribute)
+Base.broadcastable(attribute::AbstractIntegratorAttribute) = Ref(attribute)
 
 """
 $(TYPEDEF)
@@ -58,14 +58,14 @@ $(TYPEDEF)
 
 An integrator attribute for the string identifying the integration scheme.
 """
-struct IntegratorName <: AbstractIntegatorAttribute end
+struct IntegratorName <: AbstractIntegratorAttribute end
 
 """
 $(TYPEDEF)
 
 An integrator attribute for the Gradient.
 """
-struct Gradient{T <: AbstractBoundLoc} <: AbstractIntegatorAttribute
+struct Gradient{T <: AbstractBoundLoc} <: AbstractIntegratorAttribute
     index::Int
     time::Float64
 end
@@ -95,7 +95,7 @@ $(TYPEDEF)
 
 An integrator attribute for the Subgradient.
 """
-struct Subgradient{T <: AbstractBoundLoc} <: AbstractIntegatorAttribute
+struct Subgradient{T <: AbstractBoundLoc} <: AbstractIntegratorAttribute
     index::Int
     time::Float64
 end
@@ -124,7 +124,7 @@ $(TYPEDEF)
 
 An integrator attribute for value of local solution bounds.
 """
-struct Value <: AbstractIntegatorAttribute
+struct Value <: AbstractIntegratorAttribute
     index::Int
     time::Float64
 end
@@ -135,7 +135,7 @@ $(TYPEDEF)
 
 An integrator attribute for state bounds.
 """
-struct Bound{T <: AbstractBoundLoc} <: AbstractIntegatorAttribute
+struct Bound{T <: AbstractBoundLoc} <: AbstractIntegratorAttribute
     index::Int
     time::Float64
 end
@@ -164,7 +164,7 @@ $(TYPEDEF)
 
 An integrator attribute for relaxations.
 """
-struct Relaxation{T <: AbstractBoundLoc} <: AbstractIntegatorAttribute
+struct Relaxation{T <: AbstractBoundLoc} <: AbstractIntegratorAttribute
     index::Int
     time::Float64
 end
@@ -193,7 +193,7 @@ $(TYPEDEF)
 An integrator attribute for indicating bounds/relaxations are of numeric
 solution.
 """
-struct IsNumeric <: AbstractIntegatorAttribute end
+struct IsNumeric <: AbstractIntegratorAttribute end
 
 """
 $(TYPEDEF)
@@ -201,7 +201,7 @@ $(TYPEDEF)
 An integrator attribute for indicating bounds & relaxations are of exact
 solution.
 """
-struct IsSolutionSet <: AbstractIntegatorAttribute end
+struct IsSolutionSet <: AbstractIntegratorAttribute end
 
 @enum(TerminationStatusCode,
       COMPLETED, # GOOD RESULT
@@ -219,14 +219,14 @@ $(TYPEDEF)
 A integrator attribute used to query the `TerminationStatusCode` of the integrator
 on completion.
 """
-struct TerminationStatus <: AbstractIntegatorAttribute end
+struct TerminationStatus <: AbstractIntegratorAttribute end
 
 """
 $(TYPEDEF)
 
 A integrator attribute used to access the current parameter value.
 """
-struct ParameterValue <: AbstractIntegatorAttribute
+struct ParameterValue <: AbstractIntegratorAttribute
     i::Int
 end
 ParameterValue() = ParameterValue(-1)
@@ -236,7 +236,7 @@ $(TYPEDEF)
 
 A integrator attribute used to access the current parameter value.
 """
-struct ParameterBound{T <: AbstractBoundLoc} <: AbstractIntegatorAttribute
+struct ParameterBound{T <: AbstractBoundLoc} <: AbstractIntegratorAttribute
     i::Int
 end
 ParameterBound{Lower}() = ParameterBound{Lower}(-1)
@@ -248,7 +248,7 @@ $(TYPEDEF)
 
 A integrator attribute used to access independent variable support set.
 """
-struct SupportSet{T <: AbstractFloat} <: AbstractIntegatorAttribute
+struct SupportSet{T <: AbstractFloat} <: AbstractIntegratorAttribute
     s::Vector{T}
 end
 

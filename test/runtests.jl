@@ -41,14 +41,20 @@ end
 
 @testset "Integrator Attributes Interface" begin
 
-    struct UndefinedIntegrator <: DEqR.AbstractDERelaxIntegator end
+    struct UndefinedIntegrator <: DEqR.AbstractDERelaxIntegrator end
     struct UndefinedProblem <: DEqR.AbstractDERelaxProblem end
 
     undefined_problem = UndefinedProblem()
     DEqR.supports(undefined_problem, DEqR.ConstantStateBounds()) == false
 
-    mutable struct TestIntegrator <: DEqR.AbstractODERelaxIntegator
+    mutable struct TestIntegrator <: DEqR.AbstractODERelaxIntegrator
         temp::Float64
+    end
+
+    struct new_integrator_attribute <: DEqR.AbstractIntegratorAttribute
+    end
+
+    struct new_problem_attribute <: DEqR.AbstractRelaxProblemAttribute
     end
 
     DEqR.supports(::TestIntegrator, ::DEqR.IntegratorName) = true
@@ -88,8 +94,6 @@ end
     @test !DEqR.supports(undefined_integrator, DEqR.IsSolutionSet())
     @test !DEqR.supports(undefined_integrator, DEqR.TerminationStatus())
     @test !DEqR.supports(undefined_integrator, DEqR.Value())
-
-    @test_throws ErrorException make(undefined_problem, undefined_integrator)
 
     test_integrator = TestIntegrator(1.0)
     @test @inferred DEqR.supports(test_integrator, DEqR.IntegratorName())
@@ -158,6 +162,24 @@ end
     @test states.new_decision_box
     @test states.new_decision_pnt
     @test states.termination_status === RELAXATION_NOT_CALLED
+
+    out = Any[]
+    new_pa = new_problem_attribute()
+    new_ia = new_integrator_attribute()
+    @test_throws ArgumentError DEqR.get!(out, undefined_problem, new_pa)
+    @test_throws ArgumentError DEqR.get!(out, undefined_integrator, new_ia)
+
+    @test_throws ArgumentError DEqR.get(undefined_problem, new_pa)
+    @test_throws ArgumentError DEqR.get(undefined_integrator, new_ia)
+
+    #@test_throws ArgumentError DEqR.get(undefined_problem, new_pa, Float64[1.0; 2.0])
+    #@test_throws ArgumentError DEqR.get(undefined_integrator, new_ia, Float64[1.0; 2.0])
+
+    @test_throws ArgumentError DEqR.getall!(out, undefined_problem, new_pa)
+    @test_throws ArgumentError DEqR.getall!(out, undefined_integrator, new_ia)
+
+    @test_throws ArgumentError DEqR.getall(undefined_problem, new_pa)
+    @test_throws ArgumentError DEqR.getall(undefined_integrator, new_ia)
 end
 
 @testset "ODE Relax Problem" begin

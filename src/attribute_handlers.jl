@@ -1,25 +1,25 @@
-const AnyDEAttribute =  Union{AbstractIntegatorAttribute,
+const AnyDEAttribute =  Union{AbstractIntegratorAttribute,
                               AbstractRelaxProblemAttribute}
 
 """
 $(TYPEDSIGNATURES)
 
-Return a `Bool` indicating whether `::AbstractDERelaxIntegator` supports
-the `::Union{AbstractDERelaxIntegator, AbstractDERelaxProblem, AbstractDERelax}`.
+Return a `Bool` indicating whether `::AbstractDERelaxIntegrator` supports
+the `::Union{AbstractDERelaxIntegrator, AbstractDERelaxProblem, AbstractDERelax}`.
 """
 function supports end
 
-supports(::AbstractDERelaxIntegator, ::AbstractIntegatorAttribute) = false
+supports(::AbstractDERelaxIntegrator, ::AbstractIntegratorAttribute) = false
 supports(::AbstractDERelaxProblem, ::AbstractRelaxProblemAttribute) = false
 
 """
 $(TYPEDSIGNATURES)
 """
 function get end
-get(integrator::AbstractDERelaxIntegator, attr::AbstractIntegatorAttribute, idxs::Vector) = get.(integrator, attr, idxs)
+get(integrator::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, idxs::Vector) = get.(integrator, attr, idxs)
 get(problem::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, idxs::Vector) = get.(problem, attr, idxs)
-function get(m::AbstractDERelaxIntegator, attr::AbstractIntegatorAttribute, args...)
-    throw(ArgumentError("AbstractDERelaxIntegator of type $(typeof(m)) does not support accessing the attribute $attr via get"))
+function get(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
+    throw(ArgumentError("AbstractDERelaxIntegrator of type $(typeof(m)) does not support accessing the attribute $attr via get"))
 end
 function get(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, args...)
     throw(ArgumentError("AbstractDERelaxProblem of type $(typeof(m)) does not support accessing the attribute $attr via get"))
@@ -32,8 +32,8 @@ An in-place version of `get`. The signature matches that of `get` except
 that the the result is placed in the vector `output`.
 """
 function get! end
-function get!(output, m::AbstractDERelaxIntegator, attr::AbstractIntegatorAttribute, args...)
-    throw(ArgumentError("AbstractDERelaxIntegator of type $(typeof(m)) does not support accessing the attribute $attr via get!"))
+function get!(output, m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
+    throw(ArgumentError("AbstractDERelaxIntegrator of type $(typeof(m)) does not support accessing the attribute $attr via get!"))
 end
 function get!(output, m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, args...)
     throw(ArgumentError("AbstractDERelaxProblem of type $(typeof(m)) does not support accessing the attribute $attr via get!"))
@@ -47,8 +47,8 @@ An version of `get` which retreives all data asssocaited with a particular
 integrator attribute.
 """
 function getall end
-function getall(m::AbstractDERelaxIntegator, attr::AbstractIntegatorAttribute, args...)
-    throw(ArgumentError("AbstractDERelaxIntegator of type $(typeof(m)) does not support accessing the attribute $attr via getall"))
+function getall(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
+    throw(ArgumentError("AbstractDERelaxIntegrator of type $(typeof(m)) does not support accessing the attribute $attr via getall"))
 end
 function getall(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, args...)
     throw(ArgumentError("AbstractDERelaxProblem of type $(typeof(m)) does not support accessing the attribute $attr via getall"))
@@ -62,8 +62,8 @@ An in-place version of `get!` which retreives all data asssocaited with a partic
 integrator attribute.
 """
 function getall! end
-function getall!(output, m::AbstractDERelaxIntegator, attr::AbstractIntegatorAttribute, args...)
-    throw(ArgumentError("AbstractDERelaxIntegator of type $(typeof(m)) does not support accessing the attribute $attr via getall!"))
+function getall!(output, m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
+    throw(ArgumentError("AbstractDERelaxIntegrator of type $(typeof(m)) does not support accessing the attribute $attr via getall!"))
 end
 function getall!(output, m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, args...)
     throw(ArgumentError("AbstractDERelaxProblem of type $(typeof(m)) does not support accessing the attribute $attr via getall!"))
@@ -77,7 +77,7 @@ Assigns a `value` to the `attr` attribute of the integrator, problem, or relaxat
 """
 function set end
 
-function set(m::AbstractDERelaxIntegator, attr::AbstractIntegatorAttribute, idxs::Vector, vec_of_val::Vector)
+function set(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, idxs::Vector, vec_of_val::Vector)
     if length(idxs) != length(vec_of_val)
         throw(DimensionMismatch("Number of indices ($(length(idxs))) does " *
                                 "not match the number of values " *
@@ -95,7 +95,7 @@ function set(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, idx
     return set.(m, attr, idxs, vec_of_val)
 end
 
-function set(model::AbstractDERelaxIntegator, attr::AbstractIntegatorAttribute, args...)
+function set(model::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
     throw_set_error_fallback(model, attr, args...)
 end
 
@@ -109,7 +109,7 @@ $(FUNCTIONNAME)
 An in-place version of `set!` which sets all data asssocaited with a particular
 integrator attribute.
 """
-function setall!(m::AbstractDERelaxIntegator, attr::AbstractIntegatorAttribute, args...)
+function setall!(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
 end
 
 """
@@ -153,8 +153,8 @@ SetRelaxAttributeNotAllowed(attr::AnyDEAttribute) = SetRelaxAttributeNotAllowed(
 operation_name(err::SetRelaxAttributeNotAllowed) = "Setting attribute $(err.attr)"
 message(err::SetRelaxAttributeNotAllowed) = err.message
 
-function throw_set_error_fallback(model::AbstractDERelaxIntegator,
-                                  attr::AbstractIntegatorAttribute,
+function throw_set_error_fallback(model::AbstractDERelaxIntegrator,
+                                  attr::AbstractIntegratorAttribute,
                                   value;
                                   error_if_supported = SetRelaxAttributeNotAllowed(attr))
     if supports(model, attr)
