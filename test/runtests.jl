@@ -1,4 +1,5 @@
 #!/usr/bin/env julia
+
 using Test, DynamicBoundsBase
 
 const DEqR = DynamicBoundsBase
@@ -54,6 +55,10 @@ end
         temp::Float64
     end
 
+    mutable struct TestProblem <: DEqR.AbstractDERelaxProblem
+        temp::Float64
+    end
+
     struct new_integrator_attribute <: DEqR.AbstractIntegratorAttribute
     end
 
@@ -86,6 +91,9 @@ end
     DEqR.set!(t::TestIntegrator, a::DEqR.Relaxation, value) = (t.temp = value)
     DEqR.set!(t::TestIntegrator, a::DEqR.TerminationStatus, value) = (t.temp = value)
     DEqR.set!(t::TestIntegrator, a::DEqR.Value, value) = (t.temp = value)
+
+    DEqR.supports(::TestProblem, ::DEqR.Value) = true
+    DEqR.get(t::TestProblem, a::DEqR.Value) = t.temp
 
     undefined_integrator = UndefinedIntegrator()
     @test !DEqR.supports(undefined_integrator, DEqR.IntegratorName())
@@ -169,15 +177,13 @@ end
     out = Any[]
     new_pa = new_problem_attribute()
     new_ia = new_integrator_attribute()
-    @test_throws ArgumentError DEqR.get!(out, undefined_problem, new_pa)
-    @test_throws ArgumentError DEqR.get!(out, undefined_integrator, new_ia)
 
     @test_throws ArgumentError DEqR.get(undefined_problem, new_pa)
     @test_throws ArgumentError DEqR.get(undefined_integrator, new_ia)
 
     v = Float64[1.0; 2.0]
-    @test_throws ArgumentError DEqR.get(undefined_problem, new_pa, v)
-    @test_throws ArgumentError DEqR.get(undefined_integrator, new_ia, v)
+    @test_throws ArgumentError DEqR.get(undefined_problem, new_pa)
+    @test_throws ArgumentError DEqR.get(undefined_integrator, new_ia)
 
     @test_throws ArgumentError DEqR.getall!(out, undefined_problem, new_pa)
     @test_throws ArgumentError DEqR.getall!(out, undefined_integrator, new_ia)
@@ -200,6 +206,8 @@ end
     @test DEqR.message(DEqR.SetRelaxAttributeNotAllowed{Gradient{Lower}}(Gradient{Lower}(), "test_me")) == "test_me"
 
     @test DEqR.UnsupportedRelaxAttribute(DEqR.UnsupportedRelaxAttribute{Gradient{Lower}}(Gradient{Lower}(),"aaa")) == "Attribute Gradient{Lower}(-1, -Inf)"
+
+    @test_throws DEqR.SetRelaxAttributeNotAllowed{Gradient{Nominal}}(Gradient{Nominal}(-1, -Inf), "") DEqR.setall!(test_integrator, DEqR.Gradient{Nominal}(), [1.0; 2.0; 3.0])
 end
 
 @testset "ODE Relax Problem" begin

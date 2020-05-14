@@ -16,45 +16,18 @@ supports(::AbstractDERelaxProblem, ::AbstractRelaxProblemAttribute) = false
 $(TYPEDSIGNATURES)
 """
 function get end
-function get(integrator::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, idxs::Vector)
-	[get(integrator, attr, i) for i in idxs]
+function get(integrator::AbstractDERelaxIntegrator, attr::Vector{AbstractIntegratorAttribute})
+	[get(integrator, i) for i in idxs]
 end
-function get(problem::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, idxs::Vector)
-	[get(problem, attr, i) for i in idxs]
+function get(problem::AbstractDERelaxProblem, attr::Vector{AbstractRelaxProblemAttribute})
+	[get(problem, i) for i in idxs]
 end
-function get(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
+function get(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute)
     throw(ArgumentError("AbstractDERelaxIntegrator of type $(typeof(m)) does not support accessing the attribute $attr via get"))
 end
-function get(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, args...)
+function get(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute)
     throw(ArgumentError("AbstractDERelaxProblem of type $(typeof(m)) does not support accessing the attribute $attr via get"))
 end
-
-"""
-$(FUNCTIONNAME)
-
-An in-place version of `get`. The signature matches that of `get` except
-that the the result is placed in the vector `output`.
-"""
-function get! end
-function get!(output,integrator::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, idxs::Vector)
-	for (i, index) in enumerate(idxs)
-		output[i] = get(problem, attr, index)
-	end
-	nothing
-end
-function get!(output, problem::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, idxs::Vector)
-	for (i, index) in enumerate(idxs)
-		output[i] = get(problem, attr, index)
-	end
-	nothing
-end
-function get!(output, m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
-    throw(ArgumentError("AbstractDERelaxIntegrator of type $(typeof(m)) does not support accessing the attribute $attr via get!"))
-end
-function get!(output, m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, args...)
-    throw(ArgumentError("AbstractDERelaxProblem of type $(typeof(m)) does not support accessing the attribute $attr via get!"))
-end
-
 
 """
 $(FUNCTIONNAME)
@@ -102,7 +75,6 @@ function set!(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, i
 	for (i, v) in enumerate(vec_of_val)
 		set!(m, attr, @inbounds idxs[i], v)
 	end
-	nothing
 end
 
 function set!(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, idxs::Vector, vec_of_val::Vector)
@@ -114,7 +86,6 @@ function set!(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, id
 	for (i, v) in enumerate(vec_of_val)
 		set!(m, attr, @inbounds idxs[i], v)
 	end
-	nothing
 end
 
 function set!(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
@@ -132,7 +103,7 @@ An in-place version of `set!` which sets all data asssociated with a particular
 integrator attribute.
 """
 function setall!(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
-	throw_set_error_fallback(model, attr, args...)
+	throw_set_error_fallback(m, attr, args...)
 end
 
 """
