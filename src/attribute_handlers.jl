@@ -94,24 +94,25 @@ Assigns a `value` to the `attr` attribute of the integrator, problem, or relaxat
 function set! end
 
 function set!(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, idxs::Vector, vec_of_val::Vector)
-    if length(idxs) != length(vec_of_val)
+    if length(idxs) !== length(vec_of_val)
         throw(DimensionMismatch("Number of indices ($(length(idxs))) does " *
                                 "not match the number of values " *
                                 "($(length(vec_of_val))) set to `$attr`."))
     end
-	for v in vec_of_val
-		set!(m, attr, idxs, v)
+	for (i, v) in enumerate(vec_of_val)
+		set!(m, attr, @inbounds idxs[i], v)
 	end
+	nothing
 end
 
 function set!(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute, idxs::Vector, vec_of_val::Vector)
-    if length(idxs) != length(vec_of_val)
+    if length(idxs) !== length(vec_of_val)
         throw(DimensionMismatch("Number of indices ($(length(idxs))) does " *
                                 "not match the number of values " *
                                 "($(length(vec_of_val))) set to `$attr`."))
     end
-	for v in vec_of_val
-		set!(m, attr, idxs, v)
+	for (i, v) in enumerate(vec_of_val)
+		set!(m, attr, @inbounds idxs[i], v)
 	end
 	nothing
 end

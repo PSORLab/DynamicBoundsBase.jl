@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-#using Revise
+using Revise
 using Test, DynamicBoundsBase
 
 const DEqR = DynamicBoundsBase
@@ -193,11 +193,14 @@ end
     @test_throws DimensionMismatch DEqR.set!(undefined_problem, new_pa, v, [1])
     @test_throws DimensionMismatch DEqR.set!(undefined_integrator, new_ia, v, [1])
 
-    #DEqR.set!(undefined_problem, new_pa, v, [1; 2])
-    #DEqR.set!(undefined_integrator, new_ia, v, [1; 2])
+    v = Float64[1.0; 2.0]
+    @test_throws DEqR.UnsupportedRelaxAttribute{new_problem_attribute}(new_problem_attribute(), "") DEqR.set!(undefined_problem, new_pa, v, [1; 2])
+    @test_throws DEqR.UnsupportedRelaxAttribute{new_integrator_attribute}(new_integrator_attribute(), "") DEqR.set!(undefined_integrator, new_ia, v, [1; 2])
 
-    #DEqR.setall!(undefined_problem, new_pa, v, [1; 2])
-    #DEqR.setall!(undefined_integrator, new_ia, v, [1; 2])
+    @test DEqR.operation_name(DEqR.SetRelaxAttributeNotAllowed{Gradient{Lower}}(Gradient{Lower}(), "test_me")) == "Setting attribute Gradient{Lower}(-1, -Inf)"
+    @test DEqR.message(DEqR.SetRelaxAttributeNotAllowed{Gradient{Lower}}(Gradient{Lower}(), "test_me")) == "test_me"
+
+    @test DEqR.UnsupportedRelaxAttribute(DEqR.UnsupportedRelaxAttribute{Gradient{Lower}}(Gradient{Lower}(),"aaa")) == "Attribute Gradient{Lower}(-1, -Inf)"
 end
 
 @testset "ODE Relax Problem" begin
