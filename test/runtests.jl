@@ -14,6 +14,10 @@ const TSC = DEqR.TerminationStatusCode
     @test Gradient{Nominal}(t). index == 3
     @test Gradient{Nominal}(2.2).time == 2.2
 
+    ref_attr = Gradient()
+    ref = Ref(ref_attr)
+    @test Base.broadcastable(ref_attr).x == ref.x
+
     @test Subgradient{Lower}() == Subgradient{Lower}(-1, -Inf)
     @test Subgradient{Upper}() == Subgradient{Upper}(-1, -Inf)
     @test Subgradient() == Subgradient{Undefined}(-1, -Inf)
