@@ -1,5 +1,4 @@
 #!/usr/bin/env julia
-using Revise
 using Test, DynamicBoundsBase
 
 const DEqR = DynamicBoundsBase
