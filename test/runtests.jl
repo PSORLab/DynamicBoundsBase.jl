@@ -244,6 +244,11 @@ end
     @test_nowarn DEqR.set!(prob, cbnds)
     @test_nowarn DEqR.set!(prob, pconstr)
 
+    DEqR.set!(prob, cbnds)
+    DEqR.set!(prob, pconstr)
+    @test prob.constant_state_bounds.xL[1] == 1.0
+    @test prob.polyhedral_constraint.A[2,2] == 2.1
+
     csbnds = DEqR.get(prob, DEqR.ConstantStateBounds())
     pconstrs = DEqR.get(prob, DEqR.PolyhedralConstraint())
 
@@ -252,4 +257,7 @@ end
 
     @test pconstrs.A[2,2] == 2.1
     @test pconstrs.b[1] == 3.2
+
+    prob2 = DEqR.ODERelaxProb(f!, tspan, x0, pL, pU)
+    @test prob2.p == 0.5*(pL + pU)
 end
