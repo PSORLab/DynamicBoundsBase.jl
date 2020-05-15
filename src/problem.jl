@@ -1,10 +1,14 @@
 """
 $(TYPEDEF)
+
+Abstract supertype for all relaxation problems.
 """
 abstract type AbstractDERelaxProblem  end
 
 """
 $(TYPEDEF)
+
+Abstract supertype for all problem attributes.
 """
 abstract type AbstractRelaxProblemAttribute end
 
@@ -30,9 +34,13 @@ struct HasConstantStateBounds <: AbstractRelaxProblemAttribute end
 $(TYPEDEF)
 
 A problem attribute used to store constant state bounds.
+
+$(TYPEDFIELDS)
 """
 struct ConstantStateBounds <: AbstractRelaxProblemAttribute
+    "Lower state variable bounds"
     xL::Vector{Float64}
+    "Upper state variable bounds"
     xU::Vector{Float64}
     function ConstantStateBounds(xL::Vector{Float64}, xU::Vector{Float64})
         @assert length(xL) == length(xU)
@@ -52,9 +60,13 @@ struct HasVariableStateBounds <: AbstractRelaxProblemAttribute end
 $(TYPEDEF)
 
 A problem attribute used to store time-varying state bounds.
+
+$(TYPEDFIELDS)
 """
 struct VariableStateBounds{F1 <: Function, F2 <: Function} <: AbstractRelaxProblemAttribute
+    "Lower state variable bounds"
     xL::F1
+    "Upper state variable bounds"
     xU::F2
 end
 VariableStateBounds() = VariableStateBounds(Base.isempty, Base.isempty)
@@ -69,6 +81,8 @@ struct HasUserJacobian <: AbstractRelaxProblemAttribute end
 
 """
 $(TYPEDEF)
+
+An abstract supertype for all manners of path constraints.
 """
 abstract type AbstractPathConstraint <: AbstractRelaxProblemAttribute end
 

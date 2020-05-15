@@ -2,10 +2,10 @@ const AnyDEAttribute =  Union{AbstractIntegratorAttribute,
                               AbstractRelaxProblemAttribute}
 
 """
-$(TYPEDSIGNATURES)
+$(FUNCTIONNAME)
 
 Return a `Bool` indicating whether `::AbstractDERelaxIntegrator` supports
-the `::Union{AbstractDERelaxIntegrator, AbstractDERelaxProblem, AbstractDERelax}`.
+the `::Union{AbstractDERelaxIntegrator, AbstractDERelaxProblem}`.
 """
 function supports end
 
@@ -13,7 +13,10 @@ supports(::AbstractDERelaxIntegrator, ::AbstractIntegratorAttribute) = false
 supports(::AbstractDERelaxProblem, ::AbstractRelaxProblemAttribute) = false
 
 """
-$(TYPEDSIGNATURES)
+$(FUNCTIONNAME)
+
+Returns the value of attribute set for the `::Union{AbstractDERelaxIntegrator, AbstractDERelaxProblem}`. May be vector
+valued.
 """
 function get end
 function get(integrator::AbstractDERelaxIntegrator, attr::Vector{AbstractIntegratorAttribute})
@@ -32,8 +35,7 @@ end
 """
 $(FUNCTIONNAME)
 
-An version of `get` which retreives all data asssociated with a particular
-integrator attribute.
+An version of `get` which retreives all data asssociated with a particular integrator attribute.
 """
 function getall end
 function getall(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
@@ -47,8 +49,7 @@ end
 """
 $(FUNCTIONNAME)
 
-An in-place version of `get!` which retreives all data asssociated with a particular
-integrator attribute.
+An in-place version of `get!` which retreives all data asssociated with a particular integrator attribute.
 """
 function getall! end
 function getall!(output, m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute, args...)
@@ -107,13 +108,14 @@ function setall!(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute
 end
 
 """
-    UnsupportedError <: Exception
+UnsupportedError <: Exception
+
 Abstract type for error thrown when an element is not supported by the integrator.
 """
 abstract type UnsupportedError <: Exception end
 
 """
-$(TYPEDSIGNATURES)
+$(TYPEDEF)
 
 An error indicating that the attribute `attr` is unsupported.
 """
@@ -134,7 +136,7 @@ applied in the current state of the integrator
 abstract type NotAllowedError <: Exception end
 
 """
-$(TYPEDSIGNATURES)
+$(TYPEDEF)
 
 An error indicating that the attribute `attr` is supported but cannot be set
 for some reason given in the error string.

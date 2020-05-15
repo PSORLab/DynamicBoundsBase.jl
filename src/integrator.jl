@@ -4,9 +4,33 @@ $(TYPEDEF)
 Abstract supertype indicating the type of value returned at a specific index.
 """
 abstract type AbstractBoundLoc end
+
+"""
+$(TYPEDEF)
+
+Indicates the lower bound, relaxation, or (sub)gradient should be returned.
+"""
 struct Lower <: AbstractBoundLoc end
+
+"""
+$(TYPEDEF)
+
+Indicates the upper bound, relaxation, or (sub)gradient should be returned.
+"""
 struct Upper <: AbstractBoundLoc end
+
+"""
+$(TYPEDEF)
+
+Indicates the nominal value or (sub)gradient should be returned.
+"""
 struct Nominal <: AbstractBoundLoc end
+
+"""
+$(TYPEDEF)
+
+The variety of the attribute is unspecified.
+"""
 struct Undefined <: AbstractBoundLoc end
 
 """
@@ -65,7 +89,7 @@ $(TYPEDEF)
 
 An integrator attribute for the Gradient.
 """
-struct Gradient{T <: AbstractBoundLoc} <: AbstractIntegratorAttribute
+struct Gradient{T<:AbstractBoundLoc} <: AbstractIntegratorAttribute
     index::Int
     time::Float64
 end
@@ -75,7 +99,7 @@ Gradient{Nominal}() = Gradient{Nominal}(-1, -Inf)
 Gradient() = Gradient{Undefined}(-1, -Inf)
 
 """
-$(TYPEDSIGNATURES)
+Gradient{T}(i::TimeIndex)
 
 This constructor builds a structure that references the gradient of
 the relaxation at time index `i`.
@@ -83,7 +107,7 @@ the relaxation at time index `i`.
 Gradient{T}(i::TimeIndex) where {T <: AbstractBoundLoc} = Gradient{T}(i.t, -Inf)
 
 """
-$(TYPEDSIGNATURES)
+Gradient{T}(x::Float64)
 
 This constructor builds a structure that references the subgradient of
 the relaxation at time = `x`.
@@ -95,7 +119,7 @@ $(TYPEDEF)
 
 An integrator attribute for the Subgradient.
 """
-struct Subgradient{T <: AbstractBoundLoc} <: AbstractIntegratorAttribute
+struct Subgradient{T<:AbstractBoundLoc} <: AbstractIntegratorAttribute
     index::Int
     time::Float64
 end
@@ -104,7 +128,7 @@ Subgradient{Upper}() = Subgradient{Upper}(-1, -Inf)
 Subgradient() = Subgradient{Undefined}(-1, -Inf)
 
 """
-$(TYPEDSIGNATURES)
+Subgradient{T}(i::TimeIndex)
 
 This constructor builds a structure that references the subgradient of
 the relaxation at time index `i`.
@@ -112,7 +136,7 @@ the relaxation at time index `i`.
 Subgradient{T}(i::TimeIndex) where {T <: AbstractBoundLoc} = Subgradient{T}(i.t, -Inf)
 
 """
-$(TYPEDSIGNATURES)
+Subgradient{T}(x::Float64)
 
 This constructor builds a structure that references the subgradient of
 the relaxation at time = `x`.
@@ -135,7 +159,7 @@ $(TYPEDEF)
 
 An integrator attribute for state bounds.
 """
-struct Bound{T <: AbstractBoundLoc} <: AbstractIntegratorAttribute
+struct Bound{T<:AbstractBoundLoc} <: AbstractIntegratorAttribute
     index::Int
     time::Float64
 end
@@ -144,7 +168,7 @@ Bound{Upper}() = Bound{Upper}(-1, -Inf)
 Bound() = Bound{Undefined}(-1, -Inf)
 
 """
-$(TYPEDSIGNATURES)
+Bound{T}(i::TimeIndex)
 
 This constructor builds a structure that references the state
 bounds at time index `i`.
@@ -152,7 +176,7 @@ bounds at time index `i`.
 Bound{T}(i::TimeIndex) where {T <: AbstractBoundLoc} = Bound{T}(i.t, -Inf)
 
 """
-$(TYPEDSIGNATURES)
+Bound{T}(x::Float64)
 
 This constructor builds a structure that references the state
 bounds at time = `x`.
@@ -164,7 +188,7 @@ $(TYPEDEF)
 
 An integrator attribute for relaxations.
 """
-struct Relaxation{T <: AbstractBoundLoc} <: AbstractIntegratorAttribute
+struct Relaxation{T<:AbstractBoundLoc} <: AbstractIntegratorAttribute
     index::Int
     time::Float64
 end
@@ -173,7 +197,7 @@ Relaxation{Upper}() = Relaxation{Upper}(-1, -Inf)
 Relaxation() = Relaxation{Undefined}(-1, -Inf)
 
 """
-$(TYPEDSIGNATURES)
+Relaxation{T}(i::TimeIndex)
 
 This constructor builds a structure that references the relaxation
 at time index `i`.
@@ -181,7 +205,7 @@ at time index `i`.
 Relaxation{T}(i::TimeIndex) where {T <: AbstractBoundLoc} = Relaxation{T}(i.t, -Inf)
 
 """
-$(TYPEDSIGNATURES)
+Relaxation{T}(x::Float64)
 
 This constructor builds a structure that references relaxation at time = `x`.
 """
@@ -204,8 +228,9 @@ solution.
 struct IsSolutionSet <: AbstractIntegratorAttribute end
 
 @enum(TerminationStatusCode,
-      COMPLETED, # GOOD RESULT
+      COMPLETED,
       EMPTY,
+      NAN,
       RELAXATION_NOT_CALLED,
       NUMERICAL_ERROR,
       LIMIT_EXCEEDED,
@@ -217,7 +242,17 @@ struct IsSolutionSet <: AbstractIntegratorAttribute end
 $(TYPEDEF)
 
 A integrator attribute used to query the `TerminationStatusCode` of the integrator
-on completion.
+on completion. Current termination status codes are:
+- `COMPLETED`: The algorithm terminate successfully with bounds and relaxations.
+- `EMPTY`: The algorithm terminated successfully but the solution set was empty for
+         some points in `tspan`.
+- `NAN`: The algorithm terminated but some values are not a number (usually indicating
+         a domain violation was encoutered when computing relaxations).
+- `RELAXATION_NOT_CALLED`: The relaxation has not yet been computed.
+- `NUMERICAL_ERROR`: A numerical error was encountered.
+- `LIMIT_EXCEEDED`: A preset limit was exceeded (number of steps and so on).
+- `INVALID_OPTION`: An invalid option was set.
+- `OTHER_ERROR`: Another error was encountered.
 """
 struct TerminationStatus <: AbstractIntegratorAttribute end
 
@@ -253,7 +288,7 @@ struct SupportSet{T <: AbstractFloat} <: AbstractIntegratorAttribute
 end
 
 """
-$(TYPEDSIGNATURES)
+$(FUNCTIONNAME)
 
 Computes the relaxation at the current parameter value with the current
 parameter and state bounds.
@@ -261,7 +296,7 @@ parameter and state bounds.
 function relax! end
 
 """
-$(TYPEDSIGNATURES)
+$(FUNCTIONNAME)
 
 Provides a real-value integration at the current value set for each parameter.
 """

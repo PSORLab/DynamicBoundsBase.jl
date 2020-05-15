@@ -1,5 +1,7 @@
 """
 $(TYPEDEF)
+
+Abstract type for problems used to construct relaxations of parametric ODEs.
 """
 abstract type AbstractODERelaxProblem <: AbstractDERelaxProblem end
 const AODERP = AbstractODERelaxProblem
@@ -55,7 +57,7 @@ mutable struct ODERelaxProb{F,JX,JP,xType,K} <: AODERP
 end
 
 """
-$(TYPEDSIGNATURES)
+ODERelaxProb(f, tspan, x0, pL, pU; kwargs...)
 
 Constructor for basic parametric ODE problem. The `f` is rhs function. The integration time span is `tspan`. The initial
 condition (which may be a function of p) is `x0`. The lower decision variable bounds are given by `pL` and the upper
