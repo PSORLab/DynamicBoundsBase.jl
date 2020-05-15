@@ -6,7 +6,8 @@ import Base.get
 
 export HasStateBounds, HasConstantStateBounds, HasVariableStateBounds,
        HasUserJacobian, ConstantStateBounds, VariableStateBounds,
-       PolyhedralConstraint, AbstractDERelaxProblem, AbstractRelaxProblemAttribute
+       PolyhedralConstraint, AbstractDERelaxProblem, AbstractRelaxProblemAttribute,
+       AbstractDERelaxIntegrator, AbstractIntegratorAttribute, AbstractDynamicIndex
 include("problem.jl")
 
 export Nominal, Lower, Upper, Undefined, IntegratorName, Value, Gradient,
