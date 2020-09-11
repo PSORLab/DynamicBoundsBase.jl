@@ -1,3 +1,17 @@
+# Copyright (c) 2020: Matthew Wilhelm & Matthew Stuber.
+# This work is licensed under the Creative Commons Attribution-NonCommercial-
+# ShareAlike 4.0 International License. To view a copy of this license, visit
+# http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative
+# Commons, PO Box 1866, Mountain View, CA 94042, USA.
+#############################################################################
+# Dynamic Bounds Base
+# The underlying abstraction layer for DynamicBounds.
+# See https://github.com/PSORLab/DynamicBoundsBase.jl
+#############################################################################
+# src/problem.jl
+# Defines attributes and functions used by relaxation problems.
+#############################################################################
+
 """
 $(TYPEDEF)
 
@@ -70,7 +84,6 @@ struct VariableStateBounds{F1 <: Function, F2 <: Function} <: AbstractRelaxProbl
     xU::F2
 end
 VariableStateBounds() = VariableStateBounds(Base.isempty, Base.isempty)
-
 
 """
 $(TYPEDEF)
