@@ -113,20 +113,24 @@ Gradient{Nominal}() = Gradient{Nominal}(-1, -Inf)
 Gradient() = Gradient{Undefined}(-1, -Inf)
 
 """
-Gradient{T}(i::TimeIndex)
+Gradient{T}(i::TimeIndex) where {T <: AbstractBoundLoc}
 
 This constructor builds a structure that references the gradient of
 the relaxation at time index `i`.
 """
-Gradient{T}(i::TimeIndex) where {T <: AbstractBoundLoc} = Gradient{T}(i.t, -Inf)
+function Gradient{T}(i::TimeIndex) where {T <: AbstractBoundLoc}
+    Gradient{T}(i.t, -Inf)
+end
 
 """
-Gradient{T}(x::Float64)
+Gradient{T}(x::Float64) where {T <: AbstractBoundLoc}
 
 This constructor builds a structure that references the subgradient of
 the relaxation at time = `x`.
 """
-Gradient{T}(x::Float64) where {T <: AbstractBoundLoc} = Gradient{T}(-1, x)
+function Gradient{T}(x::Float64) where {T <: AbstractBoundLoc}
+    Gradient{T}(-1, x)
+end
 
 """
 $(TYPEDEF)

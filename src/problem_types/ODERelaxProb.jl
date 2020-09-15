@@ -13,7 +13,7 @@
 #############################################################################
 
 """
-$(TYPEDEF)
+AbstractODERelaxProblem
 
 Abstract type for problems used to construct relaxations of parametric ODEs.
 """

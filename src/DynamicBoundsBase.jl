@@ -39,7 +39,7 @@ export IntegratorStates
 include("utilities.jl")
 
 using DiffEqBase: ODEFunction, wrapfun_iip
-export ODERelaxProb
+export ODERelaxProb, AbstractODERelaxProblem
 include("problem_types/ODERelaxProb.jl")
 
 end
