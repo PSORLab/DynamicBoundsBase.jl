@@ -304,6 +304,8 @@ A integrator attribute used to access independent variable support set.
 struct SupportSet{T <: AbstractFloat} <: AbstractIntegratorAttribute
     s::Vector{T}
 end
+SupportSet{Float64}() = SupportSet{Float64}(Float64[])
+SupportSet() = SupportSet{Float64}()
 
 """
 $(FUNCTIONNAME)
