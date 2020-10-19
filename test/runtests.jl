@@ -246,6 +246,7 @@ end
     @test DEqR.supports(prob, DEqR.HasUserJacobian())
     @test DEqR.supports(prob, DEqR.ConstantStateBounds())
     @test DEqR.supports(prob, DEqR.PolyhedralConstraint())
+    @test DEqR.supports(prob, DEqR.SupportSet())
 
     @test DEqR.get(prob, DEqR.HasStateBounds())
     @test DEqR.get(prob, DEqR.HasConstantStateBounds())
@@ -274,4 +275,9 @@ end
 
     prob2 = DEqR.ODERelaxProb(f!, tspan, x0, pL, pU)
     @test prob2.p == 0.5*(pL + pU)
+
+    DEqR.set!(prob2, DEqR.SupportSet([1.0; 2.0]))
+    support_set = DEqR.get(prob2, DEqR.SupportSet())
+    @test support_set.s[1] == 1.0
+    @test support_set.s[2] == 2.0
 end

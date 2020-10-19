@@ -66,6 +66,8 @@ mutable struct ODERelaxProb{F,JX,JP,xType,K} <: AODERP
     polyhedral_constraint::Union{PolyhedralConstraint, Nothing}
     "Storage for the constant state bounds, if any"
     constant_state_bounds::Union{ConstantStateBounds, Nothing}
+    "The support set if used"
+    support_set::SupportSet{Float64}
     "Additional keyword arguments"
     kwargs::K
 end
@@ -87,6 +89,8 @@ function ODERelaxProb(f::F, tspan::Tuple{Float64, Float64}, x0::xType,
     else
         p = 0.5*(pL + pU)
     end
+    support_set = haskey(kwargs, :support_set) ? kwargs[:support_set] : SupportSet()
+
     np::Int = length(p)
 
     @assert((xL !== nothing && xU !== nothing) || (xL === nothing && xU === nothing),
@@ -133,7 +137,7 @@ function ODERelaxProb(f::F, tspan::Tuple{Float64, Float64}, x0::xType,
     return ODERelaxProb(fwrap, Jx!, Jp!, x0, xL, xU,
                         tspan, tsupports, p, pL, pU, user_Jx!, user_Jp!,
                         user_state_bnd, variable_state_bnd, nx, np,
-                        polyhedral, constantstate, kwargs)
+                        polyhedral, constantstate, support_set, kwargs)
 end
 
 supports(::ODERelaxProb, ::HasStateBounds) = true
@@ -142,6 +146,7 @@ supports(::ODERelaxProb, ::HasVariableStateBounds) = true
 supports(::ODERelaxProb, ::HasUserJacobian) = true
 supports(::ODERelaxProb, ::ConstantStateBounds) = true
 supports(::ODERelaxProb, ::PolyhedralConstraint) = true
+supports(::ODERelaxProb, ::SupportSet) = true
 
 get(x::ODERelaxProb, t::HasStateBounds)::Bool = x.user_state_bnd
 get(x::ODERelaxProb, t::HasConstantStateBounds)::Bool = ~(isempty(x.xL) && isempty(x.xU))
@@ -165,5 +170,13 @@ function get(x::ODERelaxProb, invariant::PolyhedralConstraint)
 end
 function set!(x::ODERelaxProb, invariant::PolyhedralConstraint)
     x.polyhedral_constraint = invariant
+    return
+end
+
+function get(x::ODERelaxProb, support_set::SupportSet{Float64})
+    return x.support_set
+end
+function set!(x::ODERelaxProb, support_set::SupportSet{Float64})
+    x.support_set = support_set
     return
 end

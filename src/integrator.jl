@@ -298,7 +298,6 @@ ParameterBound() = ParameterBound{Undefined}(-1)
 
 """
 $(TYPEDEF)
-
 A integrator attribute used to access independent variable support set.
 """
 struct SupportSet{T <: AbstractFloat} <: AbstractIntegratorAttribute
