@@ -101,16 +101,23 @@ struct IntegratorName <: AbstractIntegratorAttribute end
 """
 $(TYPEDEF)
 
-An integrator attribute retrieving the number of parameter variables (p).
+An integrator attribute retrieving the number of parameter variables (`p`) aka `np`.
 """
 struct ParameterNumber end
 
 """
 $(TYPEDEF)
 
-An integrator attribute retrieving the number of state variables (x).
+An integrator attribute retrieving the number of state variables (`x`) aka `nx`.
 """
 struct StateNumber end
+
+"""
+$(TYPEDEF)
+
+An integrator attribute retrieving the number of points in the support set of (`x`) aka `nt`.
+"""
+struct SupportNumber end
 
 """
 $(TYPEDEF)
