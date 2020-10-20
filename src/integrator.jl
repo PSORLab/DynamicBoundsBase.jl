@@ -101,6 +101,20 @@ struct IntegratorName <: AbstractIntegratorAttribute end
 """
 $(TYPEDEF)
 
+An integrator attribute retrieving the number of parameter variables (p).
+"""
+struct ParameterNumber end
+
+"""
+$(TYPEDEF)
+
+An integrator attribute retrieving the number of state variables (x).
+"""
+struct StateNumber end
+
+"""
+$(TYPEDEF)
+
 An integrator attribute for the Gradient.
 """
 struct Gradient{T<:AbstractBoundLoc} <: AbstractIntegratorAttribute
