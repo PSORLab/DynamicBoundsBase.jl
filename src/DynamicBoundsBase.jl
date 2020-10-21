@@ -34,7 +34,7 @@ export Nominal, Lower, Upper, Undefined, IntegratorName, Value, Gradient,
 
 include("integrator.jl")
 
-export set!, setall!, get, getall!, make, supports
+export set!, setall!, get, get!, getall, getall!, make, supports
 include("attribute_handlers.jl")
 
 export IntegratorStates

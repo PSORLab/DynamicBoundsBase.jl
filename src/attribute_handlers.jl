@@ -33,16 +33,31 @@ Returns the value of attribute set for the `::Union{AbstractDERelaxIntegrator, A
 valued.
 """
 function get end
-function get(integrator::AbstractDERelaxIntegrator, attr::Vector{AbstractIntegratorAttribute})
+function get(integrator::AbstractDERelaxIntegrator, attr::Vector{AbstractIntegratorAttribute}, idxs::Vector)
 	[get(integrator, i) for i in idxs]
 end
-function get(problem::AbstractDERelaxProblem, attr::Vector{AbstractRelaxProblemAttribute})
+function get(problem::AbstractDERelaxProblem, attr::Vector{AbstractRelaxProblemAttribute}, idxs::Vector)
 	[get(problem, i) for i in idxs]
 end
 function get(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute)
     throw(ArgumentError("AbstractDERelaxIntegrator of type $(typeof(m)) does not support accessing the attribute $attr via get"))
 end
 function get(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute)
+    throw(ArgumentError("AbstractDERelaxProblem of type $(typeof(m)) does not support accessing the attribute $attr via get"))
+end
+
+
+"""
+$(FUNCTIONNAME)
+
+Returns the value of attribute set for the `::Union{AbstractDERelaxIntegrator, AbstractDERelaxProblem}`. May be vector
+valued.
+"""
+function get! end
+function get!(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute)
+    throw(ArgumentError("AbstractDERelaxIntegrator of type $(typeof(m)) does not support accessing the attribute $attr via get"))
+end
+function get!(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute)
     throw(ArgumentError("AbstractDERelaxProblem of type $(typeof(m)) does not support accessing the attribute $attr via get"))
 end
 
