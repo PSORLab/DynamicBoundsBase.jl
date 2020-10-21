@@ -50,20 +50,6 @@ end
 """
 $(FUNCTIONNAME)
 
-Returns the value of attribute set for the `::Union{AbstractDERelaxIntegrator, AbstractDERelaxProblem}`. May be vector
-valued.
-"""
-function get! end
-function get!(m::AbstractDERelaxIntegrator, attr::AbstractIntegratorAttribute)
-    throw(ArgumentError("AbstractDERelaxIntegrator of type $(typeof(m)) does not support accessing the attribute $attr via get"))
-end
-function get!(m::AbstractDERelaxProblem, attr::AbstractRelaxProblemAttribute)
-    throw(ArgumentError("AbstractDERelaxProblem of type $(typeof(m)) does not support accessing the attribute $attr via get"))
-end
-
-"""
-$(FUNCTIONNAME)
-
 An version of `get` which retreives all data asssociated with a particular integrator attribute.
 """
 function getall end
