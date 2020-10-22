@@ -115,6 +115,14 @@ struct StateNumber end
 """
 $(TYPEDEF)
 
+Set to `true` if integrator should compute derivatives wrt p for the local
+ode integration.
+"""
+struct LocalSensitivityOn <: AbstractIntegratorAttribute end
+
+"""
+$(TYPEDEF)
+
 An integrator attribute retrieving the number of points in the support set of (`x`) aka `nt`.
 """
 struct SupportNumber end

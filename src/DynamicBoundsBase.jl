@@ -30,7 +30,7 @@ export Nominal, Lower, Upper, Undefined, IntegratorName, Value, Gradient,
        integrate!, make, AbstractDERelaxIntegator, AbstractODERelaxIntegrator,
        AbstractBoundLoc, TimeIndex, COMPLETED, EMPTY, RELAXATION_NOT_CALLED,
        NUMERICAL_ERROR, INVALID_OPTION, OTHER_ERROR, LIMIT_EXCEEDED, ParameterNumber,
-       StateNumber, SupportNumber
+       StateNumber, SupportNumber, LocalSensitivityOn
 
 include("integrator.jl")
 
