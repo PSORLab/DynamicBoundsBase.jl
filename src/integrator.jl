@@ -200,6 +200,8 @@ struct Value <: AbstractIntegratorAttribute
     time::Float64
 end
 Value() = Value(-1, -Inf)
+Value(i::TimeIndex) = Value(i, -Inf)
+Value(x::Float64) = Value(-1, x)
 
 """
 $(TYPEDEF)
