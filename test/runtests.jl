@@ -43,27 +43,27 @@ const TSC = DEqR.TerminationStatusCode
     @test ParameterBound() == ParameterBound{Undefined}(-1)
 end
 
-@testset "Integrator Attributes Interface" begin
+struct UndefinedIntegrator <: DEqR.AbstractDERelaxIntegrator end
+struct UndefinedProblem <: DEqR.AbstractDERelaxProblem end
 
-    struct UndefinedIntegrator <: DEqR.AbstractDERelaxIntegrator end
-    struct UndefinedProblem <: DEqR.AbstractDERelaxProblem end
+mutable struct TestIntegrator <: DEqR.AbstractODERelaxIntegrator
+    temp::Float64
+end
+
+mutable struct TestProblem <: DEqR.AbstractDERelaxProblem
+    temp::Float64
+end
+
+struct new_integrator_attribute <: DEqR.AbstractIntegratorAttribute
+end
+
+struct new_problem_attribute <: DEqR.AbstractRelaxProblemAttribute
+end
+
+@testset "Integrator Attributes Interface" begin
 
     undefined_problem = UndefinedProblem()
     DEqR.supports(undefined_problem, DEqR.ConstantStateBounds()) == false
-
-    mutable struct TestIntegrator <: DEqR.AbstractODERelaxIntegrator
-        temp::Float64
-    end
-
-    mutable struct TestProblem <: DEqR.AbstractDERelaxProblem
-        temp::Float64
-    end
-
-    struct new_integrator_attribute <: DEqR.AbstractIntegratorAttribute
-    end
-
-    struct new_problem_attribute <: DEqR.AbstractRelaxProblemAttribute
-    end
 
     DEqR.supports(::TestIntegrator, ::DEqR.IntegratorName) = true
     DEqR.supports(::TestIntegrator, ::DEqR.Gradient) = true
