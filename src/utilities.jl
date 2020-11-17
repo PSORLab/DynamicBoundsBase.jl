@@ -27,7 +27,9 @@ mutable struct IntegratorStates
     new_decision_box::Bool
     "Has the decision point changed since the last evaluation"
     new_decision_pnt::Bool
+    "The relaxed problem has been updated"
     set_lower_state::Bool
+    "The local problem has been updated"
     set_upper_state::Bool
     "How did the integrator terminate"
     termination_status::TerminationStatusCode
