@@ -315,6 +315,17 @@ struct ParameterValue <: AbstractIntegratorAttribute
 end
 ParameterValue() = ParameterValue(-1)
 
+
+"""
+$(TYPEDEF)
+
+A integrator attribute used to access the constant parameter values.
+"""
+struct ConstantParameterValue <: AbstractIntegratorAttribute
+    i::Int
+end
+ConstantParameterValue() = ConstantParameterValue(-1)
+
 """
 $(TYPEDEF)
 
