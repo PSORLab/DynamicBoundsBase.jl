@@ -62,7 +62,11 @@ mutable struct ODERelaxProb{F,JX,JP,xType,K} <: AODERP
     nx::Int
     "Decision space dimension"
     np::Int
-    "Stprage for polyhedral constraint, if any"
+    "Optional keywork argument: Indicates the rhs function and the initial
+    condition function take an additional argument `param`. For example,
+    it is now `f!(dx, x, p, param)`."
+    params::Vector{Float64}
+    "Storage for polyhedral constraint, if any"
     polyhedral_constraint::Union{PolyhedralConstraint, Nothing}
     "Storage for the constant state bounds, if any"
     constant_state_bounds::Union{ConstantStateBounds, Nothing}
@@ -80,7 +84,7 @@ condition (which may be a function of p) is `x0`. The lower decision variable bo
 decision variable bounds are given by `pU`. Other inputs are set via keyword arguments.
 """
 function ODERelaxProb(f::F, tspan::Tuple{Float64, Float64}, x0::xType,
-                      pL::Vector{Float64}, pU::Vector{Float64};
+                      pL::Vector{Float64}, pU::Vector{Float64}; params::Vector{Float64} = Float64[],
                       xL::Vector{Float64} = Float64[], xU::Vector{Float64} = Float64[],
                       Jx! = nothing, Jp! = nothing, kwargs...) where {F,xType,tType,pBnd}
 
@@ -136,7 +140,7 @@ function ODERelaxProb(f::F, tspan::Tuple{Float64, Float64}, x0::xType,
 
     return ODERelaxProb(fwrap, Jx!, Jp!, x0, xL, xU,
                         tspan, tsupports, p, pL, pU, user_Jx!, user_Jp!,
-                        user_state_bnd, variable_state_bnd, nx, np,
+                        user_state_bnd, variable_state_bnd, nx, np, params,
                         polyhedral, constantstate, support_set, kwargs)
 end
 
@@ -178,5 +182,24 @@ function get(x::ODERelaxProb, support_set::SupportSet{Float64})
 end
 function set!(x::ODERelaxProb, support_set::SupportSet{Float64})
     x.support_set = support_set
+    return
+end
+
+function get(x::ODERelaxProb, t::ConstantParameterValue)
+    return x.params[t.i]
+end
+function set!(x::ODERelaxProb, t::ConstantParameterValue, v)
+    x.params[t.i] = v
+    return
+end
+function getall(x::ODERelaxProb, t::ConstantParameterValue)
+    return x.params
+end
+function getall!(out, x::ODERelaxProb, t::ConstantParameterValue)
+    out .= x.params
+    return
+end
+function setall!(x::ODERelaxProb, t::ConstantParameterValue, v)
+    x.params .= v
     return
 end
