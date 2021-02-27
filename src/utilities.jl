@@ -35,3 +35,9 @@ mutable struct IntegratorStates
     termination_status::TerminationStatusCode
 end
 IntegratorStates() =  IntegratorStates(false, true, true, false, false, RELAXATION_NOT_CALLED)
+
+
+function seed_duals(x::AbstractArray{V}, ::Chunk{N} = Chunk(x)) where {V,N}
+  seeds = construct_seeds(Partials{N,V})
+  duals = [Dual{Nothing}(x[i],seeds[i]) for i in eachindex(x)]
+end

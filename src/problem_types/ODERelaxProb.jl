@@ -203,3 +203,145 @@ function setall!(x::ODERelaxProb, t::ConstantParameterValue, v)
     x.params .= v
     return
 end
+
+Base.@kwdef mutable struct ODELocalIntegrator
+    problem
+    ode_problem
+    sensitivity_problem
+    integrator
+    p::Vector{Float64}
+    pduals::Vector{Dual{Nothing,Float64,N}}
+    x::ElasticArray{Float64,2}
+    dxdp::Vector{ElasticArray{Float64,2}} = ElasticArray{Float64,2}[]
+    xduals::Vector{Dual{Nothing,Float64,N}}
+    user_t::Vector{Float64} = Float64[]
+    integrator_t::Vector{Float64} = Float64[]
+    local_t_dict_flt::Dict{Float64,Int64} = Dict{Float64,Int64}()
+    local_t_dict_indx::Dict{Int64,Int64} = Dict{Int64,Int64}()
+    abs_tol::Float64 = 1E-9
+    rel_tol::Float64 = 1E-8
+    function ODELocalIntegrator{NP}(prob::ODERelaxProb, integrator) where NP
+        d = new()
+        d.problem = prob
+        d.integrator = integrator
+        d.ode_problem = ODEProblem(prob.f, zeros(Float64, prob.nx),
+                                   prob.tspan, prob.p)
+        d.sensitivity_problem = ODEForwardSensitivityProblem(prob.f,
+                                                             zeros(Float64, prob.nx),
+                                                             prob.tspan,
+                                                             prob.p)
+        d.x = zeros(Float64, prob.nx, length(prob.tsupports))
+        for i = 1:prob.np
+            push!(d.dxdp, ElasticArray(zeros(Float64, prob.nx, length(prob.tsupports))))
+        end
+        d.p = copy(prob.p)
+        d.pduals = seed_duals(prob.p)
+        d.xduals = fill(Dual{Nothing}(0.0,
+                                      single_seed(Partials{prob.np, Float64}, Val(1))),
+                                      (prob.nx,))
+        return d
+    end
+end
+function ODELocalIntegrator(prob::ODERelaxProb, integrator)
+    ODELocalIntegrator{prob.np}(prob, integrator)
+end
+
+function integrate!(d::AbstractODERelaxIntegrator, p::ODERelaxProb)
+
+    local_ode_storage = DBB.get(d, DBB.LocalIntegrator())
+
+    np = DBB.get(d, DBB.ParameterNumber())
+    nx = DBB.get(d, DBB.StateNumber)
+    DBB.getall!(local_prob_storage.p, d, DBB.ParameterValue())
+    local_prob_storage.pduals .= seed_duals(local_prob_storage.p, 1:np)
+
+    initial_condition!(local_prob_storage.x0duals, d, d.local_problem_storage.pduals)
+
+    if !DBB.get(t.integrator, DBB.LocalSensitivityOn())
+        if length(local_prob_storage.x0local) != d.nx
+            resize!(local_prob_storage.x0local, d.nx)
+        end
+    else
+        if length(local_prob_storage.x0local) != nx*(np + 1)
+            resize!(local_prob_storage.x0local, nx*(np + 1))
+        end
+    end
+
+    for i = 1:nx
+        local_prob_storage.x0local[i] = d.local_prob_storage.x0duals[i].value
+        if DBB.get(t.integrator, DBB.LocalSensitivityOn())
+            for j = 1:np
+                local_prob_storage.x0local[(nx + j + (i-1)*np)] = local_prob_storage.x0duals[i].partials[j]
+            end
+        end
+    end
+    local_prob_storage.problem = remake(local_problem_storage.problem,
+                                        u0 = local_problem_storage.x0local,
+                                        p = local_prob_storage.p)
+
+    if ~isempty(local_prob_storage.user_t)
+        solution = solve(local_prob_storage.problem,
+                         local_prob_storage.integrator,
+                         saveat = local_prob_storage.user_t,
+                         abstol = local_prob_storage.abs_tol,
+                         tstops = local_prob_storage.user_t,
+                         adaptive = false,
+                         reltol = local_prob_storage.rel_tol)
+    else
+        solution = solve(local_prob_storage.problem,
+                         local_prob_storage.integrator,
+                         abstol = local_prob_storage.abs_tol,
+                         reltol = local_prob_storage.rel_tol)
+    end
+
+    new_length = length(solution.t)
+    if DBB.get(d, DBB.LocalSensitivityOn())
+        x, dxdp = extract_local_sensitivities(solution)
+    else
+        x = solution.u
+    end
+
+    resize!(local_prob_storage.pode_x, nx, new_length)
+    resize!(local_prob_storage.integrator_t, new_length)
+    prior_length = length(local_prob_storage.integrator_t)
+    if new_length == prior_length
+        local_prob_storage.integrator_t .= solution.t
+    else
+        local_prob_storage.integrator_t = solution.t
+    end
+
+    for i = 1:new_length
+        local_prob_storage.pode_x[:,i] .= x[i]
+    end
+    if DBB.get(d, DBB.LocalSensitivityOn())
+        for i = 1:np
+            resize!(local_prob_storage.pode_dxdp[i], nx, new_length)
+            local_prob_storage.pode_dxdp[i] .= dxdp[i]
+        end
+    end
+
+    empty!(local_prob_storage.local_t_dict_flt)
+    empty!(local_prob_storage.local_t_dict_indx)
+
+    for (tindx, t) in enumerate(solution.t)
+        local_prob_storage.local_t_dict_flt[t] = tindx
+    end
+
+    if !isempty(local_prob_storage.user_t)
+        next_support_time = local_prob_storage.user_t[1]
+        supports_left = length(local_prob_storage.user_t)
+        loc_count = 1
+        for (tindx, t) in enumerate(solution.t)
+            if t == next_support_time
+                local_prob_storage.local_t_dict_indx[loc_count] = tindx
+                loc_count += 1
+                supports_left -= 1
+                if supports_left > 0
+                    next_support_time = local_prob_storage.user_t[loc_count]
+                end
+            end
+        end
+    end
+
+    return nothing
+end
