@@ -204,7 +204,7 @@ function setall!(x::ODERelaxProb, t::ConstantParameterValue, v)
     return
 end
 
-Base.@kwdef mutable struct ODELocalIntegrator
+mutable struct ODELocalIntegrator{N}
     problem
     ode_problem
     sensitivity_problem
@@ -212,16 +212,18 @@ Base.@kwdef mutable struct ODELocalIntegrator
     p::Vector{Float64}
     pduals::Vector{Dual{Nothing,Float64,N}}
     x::ElasticArray{Float64,2}
-    dxdp::Vector{ElasticArray{Float64,2}} = ElasticArray{Float64,2}[]
+    dxdp::Vector{ElasticArray{Float64,2}}
     xduals::Vector{Dual{Nothing,Float64,N}}
-    user_t::Vector{Float64} = Float64[]
-    integrator_t::Vector{Float64} = Float64[]
-    local_t_dict_flt::Dict{Float64,Int64} = Dict{Float64,Int64}()
-    local_t_dict_indx::Dict{Int64,Int64} = Dict{Int64,Int64}()
-    abs_tol::Float64 = 1E-9
-    rel_tol::Float64 = 1E-8
-    function ODELocalIntegrator{NP}(prob::ODERelaxProb, integrator) where NP
+    user_t::Vector{Float64}
+    integrator_t::Vector{Float64}
+    local_t_dict_flt::Dict{Float64,Int64}
+    local_t_dict_indx::Dict{Int64,Int64}
+    abs_tol::Float64
+    rel_tol::Float64
+    function ODELocalIntegrator{N}(prob::ODERelaxProb, integrator; kwargs...) where N
         d = new()
+        d.abs_tol = 1E-9
+        d.rel_tol = 1E-8
         d.problem = prob
         d.integrator = integrator
         d.ode_problem = ODEProblem(prob.f, zeros(Float64, prob.nx),
@@ -231,14 +233,24 @@ Base.@kwdef mutable struct ODELocalIntegrator
                                                              prob.tspan,
                                                              prob.p)
         d.x = zeros(Float64, prob.nx, length(prob.tsupports))
+        dxdp = ElasticArray{Float64,2}[]
         for i = 1:prob.np
-            push!(d.dxdp, ElasticArray(zeros(Float64, prob.nx, length(prob.tsupports))))
+            push!(dxdp, ElasticArray(zeros(Float64, prob.nx, length(prob.tsupports))))
         end
+        d.dxdp = dxdp
         d.p = copy(prob.p)
         d.pduals = seed_duals(prob.p)
         d.xduals = fill(Dual{Nothing}(0.0,
-                                      single_seed(Partials{prob.np, Float64}, Val(1))),
+                                      single_seed(Partials{N, Float64}, Val(1))),
                                       (prob.nx,))
+        d.user_t = prob.support_set.s
+        d.integrator_t = prob.support_set.s
+        d.local_t_dict_flt = Dict{Float64,Int64}()
+        d.local_t_dict_indx = Dict{Int64,Int64}()
+        for (i,s) in enumerate(d.user_t)
+            d.local_t_dict_flt[s] = i
+            d.local_t_dict_indx[i] = i
+        end
         return d
     end
 end

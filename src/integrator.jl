@@ -349,6 +349,13 @@ SupportSet{Float64}() = SupportSet{Float64}(Float64[])
 SupportSet() = SupportSet{Float64}()
 
 """
+$(TYPEDEF)
+Retreives the LocalIntegrator that corresponds to the integration method used
+by the integrator.
+"""
+struct LocalIntegrator <: AbstractIntegratorAttribute end
+
+"""
 $(FUNCTIONNAME)
 
 Computes the relaxation at the current parameter value with the current

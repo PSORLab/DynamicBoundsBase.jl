@@ -14,7 +14,10 @@
 
 module DynamicBoundsBase
 
-using DocStringExtensions
+using DocStringExtensions, ElasticArrays
+using ForwardDiff: Chunk, Dual, Partials, construct_seeds, single_seed
+using DiffEqSensitivity: extract_local_sensitivities, ODEForwardSensitivityProblem
+using DiffEqBase: remake, AbstractODEProblem, ODEProblem, AbstractContinuousCallback, solve
 
 import Base.get
 
@@ -31,7 +34,8 @@ export Nominal, Lower, Upper, Undefined, IntegratorName, Value, Gradient,
        integrate!, make, AbstractDERelaxIntegator, AbstractODERelaxIntegrator,
        AbstractBoundLoc, TimeIndex, COMPLETED, EMPTY, RELAXATION_NOT_CALLED,
        NUMERICAL_ERROR, INVALID_OPTION, OTHER_ERROR, LIMIT_EXCEEDED,
-       ParameterNumber, StateNumber, SupportNumber, LocalSensitivityOn
+       ParameterNumber, StateNumber, SupportNumber, LocalSensitivityOn,
+       LocalIntegrator
 
 include("integrator.jl")
 
@@ -42,7 +46,7 @@ export IntegratorStates
 include("utilities.jl")
 
 using DiffEqBase: ODEFunction, wrapfun_iip
-export ODERelaxProb, AbstractODERelaxProblem
+export ODERelaxProb, AbstractODERelaxProblem, ODELocalIntegrator
 include("problem_types/ODERelaxProb.jl")
 
 end
