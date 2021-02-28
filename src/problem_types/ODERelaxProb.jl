@@ -211,9 +211,10 @@ mutable struct ODELocalIntegrator{N}
     integrator
     p::Vector{Float64}
     pduals::Vector{Dual{Nothing,Float64,N}}
-    x::ElasticArray{Float64,2}
-    dxdp::Vector{ElasticArray{Float64,2}}
-    xduals::Vector{Dual{Nothing,Float64,N}}
+    x0::Vector{Float64}
+    x::Matrix{Float64}
+    dxdp::Vector{Matrix{Float64}}
+    x0duals::Vector{Dual{Nothing,Float64,N}}
     user_t::Vector{Float64}
     integrator_t::Vector{Float64}
     local_t_dict_flt::Dict{Float64,Int64}
@@ -232,19 +233,21 @@ mutable struct ODELocalIntegrator{N}
                                                              zeros(Float64, prob.nx),
                                                              prob.tspan,
                                                              prob.p)
-        d.x = zeros(Float64, prob.nx, length(prob.tsupports))
-        dxdp = ElasticArray{Float64,2}[]
+        d.x0 = zeros(Float64, prob.nx)
+        dxdp = Matrix{Float64}[]
         for i = 1:prob.np
-            push!(dxdp, ElasticArray(zeros(Float64, prob.nx, length(prob.tsupports))))
+            push!(dxdp, zeros(Float64, prob.nx, length(prob.support_set.s)))
         end
+        d.x = zeros(prob.nx, length(prob.support_set.s))
         d.dxdp = dxdp
         d.p = copy(prob.p)
         d.pduals = seed_duals(prob.p)
-        d.xduals = fill(Dual{Nothing}(0.0,
+        d.x0duals = fill(Dual{Nothing}(0.0,
                                       single_seed(Partials{N, Float64}, Val(1))),
                                       (prob.nx,))
-        d.user_t = prob.support_set.s
-        d.integrator_t = prob.support_set.s
+        support_set = get(prob, SupportSet())
+        d.user_t = copy(support_set.s)
+        d.integrator_t = copy(support_set.s)
         d.local_t_dict_flt = Dict{Float64,Int64}()
         d.local_t_dict_indx = Dict{Int64,Int64}()
         for (i,s) in enumerate(d.user_t)
@@ -258,84 +261,108 @@ function ODELocalIntegrator(prob::ODERelaxProb, integrator)
     ODELocalIntegrator{prob.np}(prob, integrator)
 end
 
-function integrate!(d::AbstractODERelaxIntegrator, p::ODERelaxProb)
+function integrate!(::Val{true}, d::AbstractODERelaxIntegrator, p::ODERelaxProb)
 
-    local_ode_storage = DBB.get(d, DBB.LocalIntegrator())
-
-    np = DBB.get(d, DBB.ParameterNumber())
-    nx = DBB.get(d, DBB.StateNumber)
-    DBB.getall!(local_prob_storage.p, d, DBB.ParameterValue())
-    local_prob_storage.pduals .= seed_duals(local_prob_storage.p, 1:np)
-
-    initial_condition!(local_prob_storage.x0duals, d, d.local_problem_storage.pduals)
-
-    if !DBB.get(t.integrator, DBB.LocalSensitivityOn())
-        if length(local_prob_storage.x0local) != d.nx
-            resize!(local_prob_storage.x0local, d.nx)
-        end
-    else
-        if length(local_prob_storage.x0local) != nx*(np + 1)
-            resize!(local_prob_storage.x0local, nx*(np + 1))
-        end
+    local_prob_storage = get(d, LocalIntegrator())
+    np = get(d, ParameterNumber())
+    nx = get(d, StateNumber())
+    if size(local_prob_storage.x0, 1) != nx + nx*np
+        local_prob_storage.x0 = zeros(nx + nx*np)
     end
-
     for i = 1:nx
-        local_prob_storage.x0local[i] = d.local_prob_storage.x0duals[i].value
-        if DBB.get(t.integrator, DBB.LocalSensitivityOn())
-            for j = 1:np
-                local_prob_storage.x0local[(nx + j + (i-1)*np)] = local_prob_storage.x0duals[i].partials[j]
-            end
+        local_prob_storage.x0[i] = local_prob_storage.x0duals[i].value
+        for j = 1:np
+            local_prob_storage.x0[(nx + j + (i-1)*np)] = local_prob_storage.x0duals[i].partials[j]
         end
     end
-    local_prob_storage.problem = remake(local_problem_storage.problem,
-                                        u0 = local_problem_storage.x0local,
-                                        p = local_prob_storage.p)
 
-    if ~isempty(local_prob_storage.user_t)
-        solution = solve(local_prob_storage.problem,
-                         local_prob_storage.integrator,
-                         saveat = local_prob_storage.user_t,
-                         abstol = local_prob_storage.abs_tol,
-                         tstops = local_prob_storage.user_t,
-                         adaptive = false,
-                         reltol = local_prob_storage.rel_tol)
-    else
-        solution = solve(local_prob_storage.problem,
-                         local_prob_storage.integrator,
-                         abstol = local_prob_storage.abs_tol,
-                         reltol = local_prob_storage.rel_tol)
-    end
+    local_prob_storage.sensitivity_problem = remake(local_prob_storage.sensitivity_problem,
+                                            u0 = local_prob_storage.x0,
+                                            p = local_prob_storage.p)
 
-    new_length = length(solution.t)
-    if DBB.get(d, DBB.LocalSensitivityOn())
-        x, dxdp = extract_local_sensitivities(solution)
-    else
-        x = solution.u
-    end
+    solution = solve(local_prob_storage.sensitivity_problem,
+                     local_prob_storage.integrator,
+                     saveat = local_prob_storage.user_t,
+                     abstol = local_prob_storage.abs_tol,
+                     tstops = local_prob_storage.user_t,
+                     reltol = local_prob_storage.rel_tol)
 
-    resize!(local_prob_storage.pode_x, nx, new_length)
-    resize!(local_prob_storage.integrator_t, new_length)
+    x, dxdp = extract_local_sensitivities(solution)
+
+    new_length = size(x, 2)
     prior_length = length(local_prob_storage.integrator_t)
     if new_length == prior_length
         local_prob_storage.integrator_t .= solution.t
     else
+        local_prob_storage.x = zeros(nx, new_length)
+        for i = 1:np
+            local_prob_storage.dxdp[i] = zeros(nx, new_length)
+        end
         local_prob_storage.integrator_t = solution.t
     end
+    local_prob_storage.x .= x
+    for i = 1:np
+        local_prob_storage.dxdp[i] .= dxdp[i]
+    end
 
+    return solution.t
+end
+
+function integrate!(::Val{false}, d::AbstractODERelaxIntegrator, p::ODERelaxProb)
+
+    local_prob_storage = get(d, LocalIntegrator())
+    np = get(d, ParameterNumber())
+    nx = get(d, StateNumber())
+
+    if size(local_prob_storage.x0, 1) != nx
+        local_prob_storage.x0 = zeros(nx)
+    end
+    for i = 1:nx
+        local_prob_storage.x0[i] = local_prob_storage.x0duals[i].value
+    end
+
+    local_prob_storage.ode_problem = remake(local_prob_storage.ode_problem,
+                                            u0 = local_prob_storage.x0,
+                                            p = local_prob_storage.p)
+
+    solution = solve(local_prob_storage.ode_problem,
+                     local_prob_storage.integrator,
+                     saveat = local_prob_storage.user_t,
+                     abstol = local_prob_storage.abs_tol,
+                     tstops = local_prob_storage.user_t,
+                     reltol = local_prob_storage.rel_tol)
+
+    x = solution.u
+
+    new_length = length(x)
+    prior_length = length(local_prob_storage.integrator_t)
+    if new_length == prior_length
+        local_prob_storage.integrator_t .= solution.t
+    else
+        local_prob_storage.x = zeros(nx, new_length)
+        local_prob_storage.integrator_t = solution.t
+    end
     for i = 1:new_length
-        local_prob_storage.pode_x[:,i] .= x[i]
+        local_prob_storage.x[:,i] .= x[i]
     end
-    if DBB.get(d, DBB.LocalSensitivityOn())
-        for i = 1:np
-            resize!(local_prob_storage.pode_dxdp[i], nx, new_length)
-            local_prob_storage.pode_dxdp[i] .= dxdp[i]
-        end
-    end
+
+    return solution.t
+end
+
+function integrate!(d::AbstractODERelaxIntegrator, p::ODERelaxProb)
+
+    local_prob_storage = get(d, LocalIntegrator())::ODELocalIntegrator
+
+    getall!(local_prob_storage.p, d, ParameterValue())
+    local_prob_storage.pduals .= seed_duals(local_prob_storage.p)
+    local_prob_storage.x0duals = p.x0(d.local_problem_storage.pduals)
+
+    solution_t = integrate!(Val(get(d, LocalSensitivityOn())), d, p)
 
     empty!(local_prob_storage.local_t_dict_flt)
     empty!(local_prob_storage.local_t_dict_indx)
 
-    for (tindx, t) in enumerate(solution.t)
+    for (tindx, t) in enumerate(solution_t)
         local_prob_storage.local_t_dict_flt[t] = tindx
     end
 
@@ -343,7 +370,7 @@ function integrate!(d::AbstractODERelaxIntegrator, p::ODERelaxProb)
         next_support_time = local_prob_storage.user_t[1]
         supports_left = length(local_prob_storage.user_t)
         loc_count = 1
-        for (tindx, t) in enumerate(solution.t)
+        for (tindx, t) in enumerate(solution_t)
             if t == next_support_time
                 local_prob_storage.local_t_dict_indx[loc_count] = tindx
                 loc_count += 1
@@ -356,4 +383,38 @@ function integrate!(d::AbstractODERelaxIntegrator, p::ODERelaxProb)
     end
 
     return nothing
+end
+
+
+function get_val_loc_local(t::AbstractODERelaxIntegrator, index::Int64, time::Float64)
+
+    local_prob_storage = get(t, LocalIntegrator())::ODELocalIntegrator
+
+    (index <= 0 && time == -Inf) && error("Must set either index or time.")
+    if index > 0
+        return local_prob_storage.local_t_dict_indx[index]
+    end
+    local_prob_storage.local_t_dict_flt[time]
+end
+
+function get(out::Vector{Float64}, t::AbstractODERelaxIntegrator, v::Value)
+    local_prob_storage = get(t, LocalIntegrator())::ODELocalIntegrator
+    val_loc = get_val_loc_local(t, v.index, v.time)
+    out .= local_prob_storage.x[:, val_loc]
+    return
+end
+
+
+function getall!(out::Array{Float64,2}, t::AbstractODERelaxIntegrator, v::Value)
+    local_prob_storage = get(t, LocalIntegrator())::ODELocalIntegrator
+    copyto!(out, local_prob_storage.x)
+    return
+end
+
+function getall!(out::Vector{Array{Float64,2}}, t::AbstractODERelaxIntegrator, g::Gradient{Nominal})
+    local_prob_storage = get(t, LocalIntegrator())::ODELocalIntegrator
+    for i = 1:get(t, ParameterNumber())
+        copyto!(out[i], local_prob_storage.dxdp[i])
+    end
+    return
 end
