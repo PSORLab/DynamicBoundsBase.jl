@@ -35,7 +35,7 @@ export Nominal, Lower, Upper, Undefined, IntegratorName, Value, Gradient,
        AbstractBoundLoc, TimeIndex, COMPLETED, EMPTY, RELAXATION_NOT_CALLED,
        NUMERICAL_ERROR, INVALID_OPTION, OTHER_ERROR, LIMIT_EXCEEDED,
        ParameterNumber, StateNumber, SupportNumber, LocalSensitivityOn,
-       LocalIntegrator
+       LocalIntegrator, AttachedProblem
 
 include("integrator.jl")
 

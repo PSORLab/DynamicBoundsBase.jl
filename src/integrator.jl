@@ -356,6 +356,12 @@ by the integrator.
 struct LocalIntegrator <: AbstractIntegratorAttribute end
 
 """
+$(TYPEDEF)
+Retreives the problem used by the integrator.
+"""
+struct AttachedProblem <: AbstractIntegratorAttribute end
+
+"""
 $(FUNCTIONNAME)
 
 Computes the relaxation at the current parameter value with the current
@@ -369,3 +375,6 @@ $(FUNCTIONNAME)
 Provides a real-value integration at the current value set for each parameter.
 """
 function integrate! end
+
+
+integrate!(d::AbstractODERelaxIntegrator) = integrate!(d, get(d, AttachedProblem()))
