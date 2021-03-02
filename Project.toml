@@ -1,7 +1,7 @@
 name = "DynamicBoundsBase"
 uuid = "890bb398-7f8e-4565-ac8e-279ab2833f68"
 authors = ["Matthew Wilhelm <matthew.wilhelm@uconn.edu>"]
-version = "0.5.2"
+version = "0.5.3"
 
 [deps]
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
