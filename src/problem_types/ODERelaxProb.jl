@@ -241,7 +241,7 @@ mutable struct ODELocalIntegrator{N}
         d.x = zeros(prob.nx, length(prob.support_set.s))
         d.dxdp = dxdp
         d.p = copy(prob.p)
-        d.pduals = seed_duals(prob.p)
+        d.pduals = seed_duals(Val(N),prob.p)
         d.x0duals = fill(Dual{Nothing}(0.0,
                                       single_seed(Partials{N, Float64}, Val(1))),
                                       (prob.nx,))
