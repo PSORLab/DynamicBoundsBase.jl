@@ -354,7 +354,7 @@ function integrate!(d::AbstractODERelaxIntegrator, p::ODERelaxProb)
     local_prob_storage = get(d, LocalIntegrator())::ODELocalIntegrator
 
     getall!(local_prob_storage.p, d, ParameterValue())
-    local_prob_storage.pduals .= seed_duals(local_prob_storage.p)
+    local_prob_storage.pduals .= seed_duals(Val(length(local_prob_storage.p)), local_prob_storage.p)
     local_prob_storage.x0duals = p.x0(d.local_problem_storage.pduals)
 
     solution_t = integrate!(Val(get(d, LocalSensitivityOn())), d, p)
