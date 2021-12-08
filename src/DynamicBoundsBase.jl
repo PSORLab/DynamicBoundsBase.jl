@@ -17,8 +17,8 @@ module DynamicBoundsBase
 using DocStringExtensions, ElasticArrays
 using ForwardDiff: Chunk, Dual, Partials, construct_seeds, single_seed
 using SciMLBase: remake, AbstractODEProblem, ODEProblem, AbstractContinuousCallback, 
-                 solve, extract_local_sensitivities, ODEForwardSensitivityProblem,
-                 ODEFunction, wrapfun_iip
+                 solve, ODEFunction, wrapfun_iip
+using DiffEqSensitivity: extract_local_sensitivities, ODEForwardSensitivityProblem
 
 import Base.get
 
