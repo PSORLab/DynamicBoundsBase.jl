@@ -16,8 +16,9 @@ module DynamicBoundsBase
 
 using DocStringExtensions, ElasticArrays
 using ForwardDiff: Chunk, Dual, Partials, construct_seeds, single_seed
-using DiffEqSensitivity: extract_local_sensitivities, ODEForwardSensitivityProblem
-using DiffEqBase: remake, AbstractODEProblem, ODEProblem, AbstractContinuousCallback, solve
+using SciMLBase: remake, AbstractODEProblem, ODEProblem, AbstractContinuousCallback, 
+                 solve, extract_local_sensitivities, ODEForwardSensitivityProblem,
+                 ODEFunction, wrapfun_iip
 
 import Base.get
 
@@ -25,7 +26,7 @@ export HasStateBounds, HasConstantStateBounds, HasVariableStateBounds,
        HasUserJacobian, ConstantStateBounds, VariableStateBounds,
        PolyhedralConstraint, AbstractDERelaxProblem, AbstractRelaxProblemAttribute,
        AbstractDERelaxIntegrator, AbstractIntegratorAttribute, AbstractDynamicIndex
-include("problem.jl")
+include(joinpath(@__DIR__, "problem.jl"))
 
 export Nominal, Lower, Upper, Undefined, IntegratorName, Value, Gradient,
        ConstantParameterValue, Subgradient, Bound, Relaxation,IsNumeric,
@@ -37,16 +38,15 @@ export Nominal, Lower, Upper, Undefined, IntegratorName, Value, Gradient,
        ParameterNumber, StateNumber, SupportNumber, LocalSensitivityOn,
        LocalIntegrator, AttachedProblem
 
-include("integrator.jl")
+include(joinpath(@__DIR__, "integrator.jl"))
 
 export set!, setall!, get, getall, getall!, make, supports
-include("attribute_handlers.jl")
+include(joinpath(@__DIR__, "attribute_handlers.jl"))
 
 export IntegratorStates
-include("utilities.jl")
+include(joinpath(@__DIR__, "utilities.jl"))
 
-using DiffEqBase: ODEFunction, wrapfun_iip
 export ODERelaxProb, AbstractODERelaxProblem, ODELocalIntegrator
-include("problem_types/ODERelaxProb.jl")
+include(joinpath(@__DIR__, "problems", "ODERelaxProb.jl"))
 
 end
