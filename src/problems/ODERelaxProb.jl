@@ -88,22 +88,20 @@ function ODERelaxProb(f::F, tspan::Tuple{Float64, Float64}, x0::xType,
                       xL::Vector{Float64} = Float64[], xU::Vector{Float64} = Float64[],
                       Jx! = nothing, Jp! = nothing, kwargs...) where {F,xType,tType,pBnd}
 
-    if haskey(kwargs,:p)
+    if haskey(kwargs, :p)
         p::Vector{Float64} = kwargs[:p]
     else
         p = 0.5*(pL + pU)
     end
     support_set = haskey(kwargs, :support_set) ? kwargs[:support_set] : SupportSet()
-
     np::Int = length(p)
 
-    @assert((xL !== nothing && xU !== nothing) || (xL === nothing && xU === nothing),
-            "Both state bounds must be set or neither must be set")
+    @assert((xL !== nothing && xU !== nothing) || (xL === nothing && xU === nothing), "Both state bounds must be set or neither must be set")
     @assert((pL !== nothing && pU !== nothing), "Box constraints on parameters must be defined.")
     @assert(length(pL) === np === length(pU), "The parameter vector and bounds must have the same length.")
 
 
-    nx::Int64 = haskey(kwargs, :nx) ? kwargs[:nx] : length(x0(pL))
+    nx::Int = haskey(kwargs, :nx) ? kwargs[:nx] : length(x0(pL))
     tsupports::Vector{Float64} =  haskey(kwargs, :tsupports) ? kwargs[:tsupports] : Float64[]
 
     polyhedral = haskey(kwargs, :polyhedral_constraint) ?  kwargs[:polyhedral_constraint] : nothing
@@ -154,54 +152,36 @@ supports(::ODERelaxProb, ::SupportSet) = true
 
 get(x::ODERelaxProb, t::HasStateBounds)::Bool = x.user_state_bnd
 get(x::ODERelaxProb, t::HasConstantStateBounds)::Bool = ~(isempty(x.xL) && isempty(x.xU))
-function get(x::ODERelaxProb, t::HasVariableStateBounds)::Bool
-    return x.variable_state_bnd
-end
-function get(x::ODERelaxProb, t::HasUserJacobian)::Bool
-    return x.user_Jx || x.user_Jp
-end
+get(x::ODERelaxProb, t::HasVariableStateBounds)::Bool = x.variable_state_bnd
+get(x::ODERelaxProb, t::HasUserJacobian)::Bool = x.user_Jx || x.user_Jp
 
-function get(x::ODERelaxProb, t::ConstantStateBounds)
-    return x.constant_state_bounds
-end
+get(x::ODERelaxProb, t::ConstantStateBounds) = x.constant_state_bounds
 function set!(x::ODERelaxProb, bnds::ConstantStateBounds)
     x.constant_state_bounds = bnds
-    return
 end
 
-function get(x::ODERelaxProb, invariant::PolyhedralConstraint)
-    return x.polyhedral_constraint
-end
+get(x::ODERelaxProb, invariant::PolyhedralConstraint) = x.polyhedral_constraint
 function set!(x::ODERelaxProb, invariant::PolyhedralConstraint)
     x.polyhedral_constraint = invariant
-    return
 end
 
-function get(x::ODERelaxProb, support_set::SupportSet{Float64})
-    return x.support_set
-end
+get(x::ODERelaxProb, support_set::SupportSet{Float64}) = x.support_set
 function set!(x::ODERelaxProb, support_set::SupportSet{Float64})
     x.support_set = support_set
-    return
 end
 
-function get(x::ODERelaxProb, t::ConstantParameterValue)
-    return x.params[t.i]
-end
+get(x::ODERelaxProb, t::ConstantParameterValue) = x.params[t.i]
 function set!(x::ODERelaxProb, t::ConstantParameterValue, v)
     x.params[t.i] = v
     return
 end
-function getall(x::ODERelaxProb, t::ConstantParameterValue)
-    return x.params
-end
+
+getall(x::ODERelaxProb, t::ConstantParameterValue) = x.params
 function getall!(out, x::ODERelaxProb, t::ConstantParameterValue)
     out .= x.params
-    return
 end
 function setall!(x::ODERelaxProb, t::ConstantParameterValue, v)
     x.params .= v
-    return
 end
 
 mutable struct ODELocalIntegrator{N}
@@ -221,18 +201,16 @@ mutable struct ODELocalIntegrator{N}
     local_t_dict_indx::Dict{Int64,Int64}
     abs_tol::Float64
     rel_tol::Float64
+    adaptive_solver::Bool
     function ODELocalIntegrator{N}(prob::ODERelaxProb, integrator; kwargs...) where N
         d = new()
         d.abs_tol = 1E-9
         d.rel_tol = 1E-8
         d.problem = prob
         d.integrator = integrator
-        d.ode_problem = ODEProblem(prob.f, zeros(Float64, prob.nx),
-                                   prob.tspan, prob.p)
-        d.sensitivity_problem = ODEForwardSensitivityProblem(prob.f,
-                                                             zeros(Float64, prob.nx),
-                                                             prob.tspan,
-                                                             prob.p)
+
+        d.ode_problem = ODEProblem(prob.f, [0.0; 0.0; 0.0; 0.4; 140.0], prob.tspan, prob.p; Jx! = prob.Jx!)
+        d.sensitivity_problem = ODEForwardSensitivityProblem(prob.f, zeros(Float64, prob.nx), prob.tspan, prob.p)
         d.x0 = zeros(Float64, prob.nx)
         dxdp = Matrix{Float64}[]
         for i = 1:prob.np
@@ -242,9 +220,7 @@ mutable struct ODELocalIntegrator{N}
         d.dxdp = dxdp
         d.p = copy(prob.p)
         d.pduals = seed_duals(Val(N),prob.p)
-        d.x0duals = fill(Dual{Nothing}(0.0,
-                                      single_seed(Partials{N, Float64}, Val(1))),
-                                      (prob.nx,))
+        d.x0duals = fill(Dual{Nothing}(0.0, single_seed(Partials{N, Float64}, Val(1))), (prob.nx,))
         support_set = get(prob, SupportSet())
         d.user_t = copy(support_set.s)
         d.integrator_t = copy(support_set.s)
@@ -254,12 +230,11 @@ mutable struct ODELocalIntegrator{N}
             d.local_t_dict_flt[s] = i
             d.local_t_dict_indx[i] = i
         end
+        d.adaptive_solver = true
         return d
     end
 end
-function ODELocalIntegrator(prob::ODERelaxProb, integrator)
-    ODELocalIntegrator{prob.np}(prob, integrator)
-end
+ODELocalIntegrator(prob::ODERelaxProb, integrator) = ODELocalIntegrator{prob.np}(prob, integrator)
 
 function integrate!(::Val{true}, d::AbstractODERelaxIntegrator, p::ODERelaxProb)
 
@@ -277,16 +252,11 @@ function integrate!(::Val{true}, d::AbstractODERelaxIntegrator, p::ODERelaxProb)
     end
 
     local_prob_storage.sensitivity_problem = remake(local_prob_storage.sensitivity_problem,
-                                            u0 = local_prob_storage.x0,
-                                            p = local_prob_storage.p)
+                                                    u0 = local_prob_storage.x0, p = local_prob_storage.p)
 
-    solution = solve(local_prob_storage.sensitivity_problem,
-                     local_prob_storage.integrator,
-                     saveat = local_prob_storage.user_t,
-                     abstol = local_prob_storage.abs_tol,
-                     tstops = local_prob_storage.user_t,
-                     reltol = local_prob_storage.rel_tol)
-
+    solution = solve(local_prob_storage.sensitivity_problem, local_prob_storage.integrator, saveat = local_prob_storage.user_t,
+                     abstol = local_prob_storage.abs_tol, tstops = local_prob_storage.user_t, reltol = local_prob_storage.rel_tol,
+                     adaptive = local_prob_storage.adaptive_solver)
     x, dxdp = extract_local_sensitivities(solution)
 
     new_length = size(x, 2)
@@ -304,7 +274,6 @@ function integrate!(::Val{true}, d::AbstractODERelaxIntegrator, p::ODERelaxProb)
     for i = 1:np
         local_prob_storage.dxdp[i] .= dxdp[i]
     end
-
     return solution.t
 end
 
@@ -324,14 +293,7 @@ function integrate!(::Val{false}, d::AbstractODERelaxIntegrator, p::ODERelaxProb
     local_prob_storage.ode_problem = remake(local_prob_storage.ode_problem,
                                             u0 = local_prob_storage.x0,
                                             p = local_prob_storage.p)
-
-    solution = solve(local_prob_storage.ode_problem,
-                     local_prob_storage.integrator,
-                     saveat = local_prob_storage.user_t,
-                     abstol = local_prob_storage.abs_tol,
-                     tstops = local_prob_storage.user_t,
-                     reltol = local_prob_storage.rel_tol)
-
+    solution = solve(local_prob_storage.ode_problem, local_prob_storage.integrator(), saveat = copy(p.support_set.s), tstops = copy(p.support_set.s), adaptive = false, rel_tol = 1.0e-8, abs_tol = 1.0e-9)
     x = solution.u
 
     new_length = length(x)
@@ -345,7 +307,6 @@ function integrate!(::Val{false}, d::AbstractODERelaxIntegrator, p::ODERelaxProb
     for i = 1:new_length
         local_prob_storage.x[:,i] .= x[i]
     end
-
     return solution.t
 end
 
@@ -381,19 +342,13 @@ function integrate!(d::AbstractODERelaxIntegrator, p::ODERelaxProb)
             end
         end
     end
-
-    return nothing
+    return
 end
 
-
-function get_val_loc_local(t::AbstractODERelaxIntegrator, index::Int64, time::Float64)
-
+function get_val_loc_local(t::AbstractODERelaxIntegrator, index::Int, time::Float64)
     local_prob_storage = get(t, LocalIntegrator())::ODELocalIntegrator
-
     (index <= 0 && time == -Inf) && error("Must set either index or time.")
-    if index > 0
-        return local_prob_storage.local_t_dict_indx[index]
-    end
+    (index > 0) && (return local_prob_storage.local_t_dict_indx[index])
     local_prob_storage.local_t_dict_flt[time]
 end
 
@@ -401,14 +356,12 @@ function get(out::Vector{Float64}, t::AbstractODERelaxIntegrator, v::Value)
     local_prob_storage = get(t, LocalIntegrator())::ODELocalIntegrator
     val_loc = get_val_loc_local(t, v.index, v.time)
     out .= local_prob_storage.x[:, val_loc]
-    return
 end
 
 
 function getall!(out::Array{Float64,2}, t::AbstractODERelaxIntegrator, v::Value)
     local_prob_storage = get(t, LocalIntegrator())::ODELocalIntegrator
     copyto!(out, local_prob_storage.x)
-    return
 end
 
 function getall!(out::Vector{Array{Float64,2}}, t::AbstractODERelaxIntegrator, g::Gradient{Nominal})
@@ -416,5 +369,4 @@ function getall!(out::Vector{Array{Float64,2}}, t::AbstractODERelaxIntegrator, g
     for i = 1:get(t, ParameterNumber())
         copyto!(out[i], local_prob_storage.dxdp[i])
     end
-    return
 end
