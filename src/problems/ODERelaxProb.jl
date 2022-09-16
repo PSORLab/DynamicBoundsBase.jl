@@ -124,7 +124,7 @@ function ODERelaxProb(f::F, tspan::Tuple{Float64, Float64}, x0::xType,
     user_Jp!::Bool = Jp! !== nothing
     if user_Jx! && user_Jp!
         JxWrap = wrapfun_iip(Jx!, (Jx0, x0s, p, tspan[1],))
-        JpWrap = wrapfun_iip(Jx!, (Jp0, x0s, p, tspan[1],))
+        JpWrap = wrapfun_iip(Jp!, (Jp0, x0s, p, tspan[1],))
         fwrap = ODEFunction(f; jac = JxWrap, paramjac = JpWrap)
     elseif user_Jx!
         JxWrap = wrapfun_iip(Jx!, (Jx0, x0s, p, tspan[1],))
