@@ -208,8 +208,7 @@ mutable struct ODELocalIntegrator{N}
         d.rel_tol = 1E-8
         d.problem = prob
         d.integrator = integrator
-
-        d.ode_problem = ODEProblem(prob.f, [0.0; 0.0; 0.0; 0.4; 140.0], prob.tspan, prob.p; Jx! = prob.Jx!)
+        d.ode_problem = ODEProblem(prob.f, zeros(Float64, prob.nx), prob.tspan, prob.p; Jx! = prob.Jx!)
         d.sensitivity_problem = ODEForwardSensitivityProblem(prob.f, zeros(Float64, prob.nx), prob.tspan, prob.p)
         d.x0 = zeros(Float64, prob.nx)
         dxdp = Matrix{Float64}[]
